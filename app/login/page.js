@@ -64,6 +64,14 @@ export default function Login() {
       <button className="w-full bg-green-500 text-white p-2 rounded">
         Ingresar
       </button>
+      <p className="mt-4">
+  <a
+    href="/forgot-password"
+    className="text-blue-500 underline"
+  >
+    ¿Olvidaste tu contraseña?
+  </a>
+</p>
     </form>
   </div>
 );
