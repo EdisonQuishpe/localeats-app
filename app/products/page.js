@@ -4,6 +4,8 @@ import { useEffect, useState } from "react";
 
 export default function Products() {
   const [products, setProducts] = useState([]);
+  const [editingProduct, setEditingProduct] = useState(null);
+
   const [form, setForm] = useState({
     name: "",
     description: "",
@@ -29,12 +31,20 @@ export default function Products() {
     });
   };
 
-  // ➕ Crear producto
+  // ➕ CREAR o ✏️ EDITAR
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    const res = await fetch("/api/products", {
-      method: "POST",
+    let url = "/api/products";
+    let method = "POST";
+
+    if (editingProduct) {
+      url = `/api/products/${editingProduct}`;
+      method = "PUT";
+    }
+
+    const res = await fetch(url, {
+      method,
       headers: {
         "Content-Type": "application/json",
       },
@@ -44,12 +54,14 @@ export default function Products() {
     const data = await res.json();
     alert(data.message || data.error);
 
-    // limpiar formulario
+    // reset
     setForm({
       name: "",
       description: "",
       price: "",
     });
+
+    setEditingProduct(null);
 
     fetchProducts();
   };
@@ -85,11 +97,11 @@ export default function Products() {
         />
 
         <button className="bg-blue-500 text-white p-2">
-          Crear
+          {editingProduct ? "Actualizar" : "Crear"}
         </button>
       </form>
 
-      {/* 🟢 LISTA DE PRODUCTOS */}
+      {/* 🟢 LISTA */}
       <div>
         {products.map((p) => (
           <div key={p.id} className="border p-2 mb-2">
@@ -114,26 +126,13 @@ export default function Products() {
             <button
               className="bg-yellow-500 text-white p-1"
               onClick={() => {
-                const newName = prompt("Nuevo nombre:", p.name);
-                const newDesc = prompt("Nueva descripción:", p.description);
-                const newPrice = prompt("Nuevo precio:", p.price);
+                setForm({
+                  name: p.name,
+                  description: p.description,
+                  price: p.price,
+                });
 
-                if (!newName || !newDesc || !newPrice) {
-                  alert("Todos los campos son obligatorios");
-                  return;
-                }
-
-                fetch(`/api/products/${p.id}`, {
-                  method: "PUT",
-                  headers: {
-                    "Content-Type": "application/json",
-                  },
-                  body: JSON.stringify({
-                    name: newName,
-                    description: newDesc,
-                    price: newPrice,
-                  }),
-                }).then(() => fetchProducts());
+                setEditingProduct(p.id);
               }}
             >
               Editar
