@@ -1,12 +1,15 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 
 export default function Login() {
   const [form, setForm] = useState({
     email: "",
     password: "",
   });
+
+  const router = useRouter(); // 🔥 AQUÍ
 
   const handleChange = (e) => {
     setForm({
@@ -30,7 +33,7 @@ export default function Login() {
     console.log(data);
 
     if (data.user) {
-      alert("Login exitoso");
+      router.push("/dashboard"); // 🔥 AQUÍ
     } else {
       alert(data.error);
     }
