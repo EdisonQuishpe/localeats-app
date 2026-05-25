@@ -9,6 +9,13 @@ export default function Register() {
     password: "",
   });
 
+  const handleChange = (e) => {
+    setForm({
+      ...form,
+      [e.target.name]: e.target.value,
+    });
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -27,9 +34,28 @@ export default function Register() {
 
   return (
     <form onSubmit={handleSubmit}>
-      <input placeholder="Nombre" onChange={(e) => setForm({ ...form, name: e.target.value })} />
-      <input placeholder="Email" onChange={(e) => setForm({ ...form, email: e.target.value })} />
-      <input type="password" placeholder="Password" onChange={(e) => setForm({ ...form, password: e.target.value })} />
+      <input
+        name="name"
+        placeholder="Nombre"
+        value={form.name}
+        onChange={handleChange}
+      />
+
+      <input
+        name="email"
+        placeholder="Email"
+        value={form.email}
+        onChange={handleChange}
+      />
+
+      <input
+        name="password"
+        type="password"
+        placeholder="Password"
+        value={form.password}
+        onChange={handleChange}
+      />
+
       <button type="submit">Registrar</button>
     </form>
   );

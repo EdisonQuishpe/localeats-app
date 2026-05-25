@@ -8,6 +8,13 @@ export default function Login() {
     password: "",
   });
 
+  const handleChange = (e) => {
+    setForm({
+      ...form,
+      [e.target.name]: e.target.value,
+    });
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -21,13 +28,31 @@ export default function Login() {
 
     const data = await res.json();
     console.log(data);
-    alert(data.message || data.error);
+
+    if (data.user) {
+      alert("Login exitoso");
+    } else {
+      alert(data.error);
+    }
   };
 
   return (
     <form onSubmit={handleSubmit}>
-      <input placeholder="Email" onChange={(e) => setForm({ ...form, email: e.target.value })} />
-      <input type="password" placeholder="Password" onChange={(e) => setForm({ ...form, password: e.target.value })} />
+      <input
+        name="email"
+        placeholder="Email"
+        value={form.email}
+        onChange={handleChange}
+      />
+
+      <input
+        name="password"
+        type="password"
+        placeholder="Password"
+        value={form.password}
+        onChange={handleChange}
+      />
+
       <button type="submit">Login</button>
     </form>
   );
