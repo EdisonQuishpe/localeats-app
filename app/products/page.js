@@ -51,14 +51,14 @@ export default function Products() {
       price: "",
     });
 
-    fetchProducts(); // actualizar lista
+    fetchProducts();
   };
 
   return (
     <div className="p-6">
       <h1 className="text-2xl font-bold mb-4">Productos</h1>
 
-      {/* Formulario */}
+      {/* 🟢 FORMULARIO */}
       <form onSubmit={handleSubmit} className="mb-6">
         <input
           name="name"
@@ -89,13 +89,55 @@ export default function Products() {
         </button>
       </form>
 
-      {/* Lista */}
+      {/* 🟢 LISTA DE PRODUCTOS */}
       <div>
         {products.map((p) => (
           <div key={p.id} className="border p-2 mb-2">
             <h2 className="font-bold">{p.name}</h2>
             <p>{p.description}</p>
             <p>${p.price}</p>
+
+            {/* 🗑️ ELIMINAR */}
+            <button
+              className="bg-red-500 text-white p-1 mr-2"
+              onClick={async () => {
+                await fetch(`/api/products/${p.id}`, {
+                  method: "DELETE",
+                });
+                fetchProducts();
+              }}
+            >
+              Eliminar
+            </button>
+
+            {/* ✏️ EDITAR */}
+            <button
+              className="bg-yellow-500 text-white p-1"
+              onClick={() => {
+                const newName = prompt("Nuevo nombre:", p.name);
+                const newDesc = prompt("Nueva descripción:", p.description);
+                const newPrice = prompt("Nuevo precio:", p.price);
+
+                if (!newName || !newDesc || !newPrice) {
+                  alert("Todos los campos son obligatorios");
+                  return;
+                }
+
+                fetch(`/api/products/${p.id}`, {
+                  method: "PUT",
+                  headers: {
+                    "Content-Type": "application/json",
+                  },
+                  body: JSON.stringify({
+                    name: newName,
+                    description: newDesc,
+                    price: newPrice,
+                  }),
+                }).then(() => fetchProducts());
+              }}
+            >
+              Editar
+            </button>
           </div>
         ))}
       </div>
