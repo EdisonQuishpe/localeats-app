@@ -40,12 +40,16 @@ export default function Login() {
   };
 
   return (
-    <form onSubmit={handleSubmit}>
+  <div className="flex items-center justify-center min-h-screen bg-gray-100">
+    <form onSubmit={handleSubmit} className="bg-white p-6 rounded shadow w-80">
+      <h1 className="text-xl font-bold mb-4">Login</h1>
+
       <input
         name="email"
         placeholder="Email"
         value={form.email}
         onChange={handleChange}
+        className="w-full mb-2 p-2 border rounded"
       />
 
       <input
@@ -54,9 +58,18 @@ export default function Login() {
         placeholder="Password"
         value={form.password}
         onChange={handleChange}
+        className="w-full mb-4 p-2 border rounded"
       />
 
-      <button type="submit">Login</button>
+      <button className="w-full bg-green-500 text-white p-2 rounded">
+        Ingresar
+      </button>
     </form>
-  );
+  </div>
+);
+
+if (!form.email || !form.password) {
+  alert("Completa todos los campos");
+  return;
+}
 }
