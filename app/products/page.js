@@ -51,6 +51,22 @@ export default function Products() {
     setEditingProduct(null);
   };
 
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    const url = editingProduct ? `/api/products/${editingProduct}` : "/api/products";
+    const method = editingProduct ? "PUT" : "POST";
+    const res = await fetch(url, {
+      method,
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(form),
+    });
+    const data = await res.json();
+    alert(data.message || data.error);
+    setForm({ name: "", description: "", price: "" });
+    setEditingProduct(null);
+    fetchProducts();
+  };
+
   useEffect(() => {
     fetchProducts();
   }, []);
