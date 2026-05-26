@@ -20,6 +20,13 @@ export default function ChatPage() {
     return () => { socket.disconnect(); };
   }, []);
 
+  const sendMessage = (e) => {
+    e.preventDefault();
+    if (!message.trim()) return;
+    socket.emit("chat-message", `${username}: ${message}`);
+    setMessage("");
+  };
+
   return (
     <div className="min-h-screen bg-gray-100 p-6">
       <div className="max-w-2xl mx-auto bg-white rounded shadow p-6">
