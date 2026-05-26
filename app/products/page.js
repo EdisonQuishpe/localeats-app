@@ -15,6 +15,25 @@ export default function Products() {
     setProducts(data);
   };
 
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (!form.name || !form.description || !form.price) {
+      alert("Completa todos los campos");
+      return;
+    }
+
+    const res = await fetch("/api/products", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(form),
+    });
+    
+    const data = await res.json();
+    alert(data.message || data.error);
+    setForm({ name: "", description: "", price: "" });
+    fetchProducts();
+  };
+
   useEffect(() => {
     fetchProducts();
   }, []);
