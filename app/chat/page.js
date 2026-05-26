@@ -6,6 +6,20 @@ export default function ChatPage() {
   const [message, setMessage] = useState("");
   const [messages, setMessages] = useState([]);
 
+  useEffect(() => {
+    socket = io();
+
+    socket.on("connect", () => setConnected(true));
+
+    socket.on("chat-message", (msg) => {
+      setMessages((prev) => [...prev, msg]);
+    });
+
+    socket.on("disconnect", () => setConnected(false));
+
+    return () => { socket.disconnect(); };
+  }, []);
+
   return (
     <div className="min-h-screen bg-gray-100 p-6">
       <div className="max-w-2xl mx-auto bg-white rounded shadow p-6">
