@@ -1,6 +1,9 @@
 "use client";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { io } from "socket.io-client";
 import Link from "next/link";
+
+let socket;
 
 export default function ChatPage() {
   const [message, setMessage] = useState("");
@@ -11,15 +14,11 @@ export default function ChatPage() {
 
   useEffect(() => {
     socket = io();
-
     socket.on("connect", () => setConnected(true));
-
     socket.on("chat-message", (msg) => {
       setMessages((prev) => [...prev, msg]);
     });
-
     socket.on("disconnect", () => setConnected(false));
-
     return () => { socket.disconnect(); };
   }, []);
 
@@ -41,16 +40,18 @@ export default function ChatPage() {
           <h1 className="text-2xl font-bold">Chat LocalEats</h1>
           <Link href="/dashboard" className="text-blue-500 underline text-sm">Volver</Link>
         </div>
-        <div className="border rounded p-4 h-72 bg-gray-50 mb-4">
+        <div className="mb-4 flex items-center gap-2">
           <input
             placeholder="Tu nombre"
             value={username}
             onChange={(e) => setUsername(e.target.value)}
             className="border p-2 rounded w-48 text-sm"
           />
-          <span className="ml-2 text-sm text-gray-400">
+          <span className="text-sm text-gray-400">
             {connected ? "🟢 Conectado" : "🔴 Desconectado"}
           </span>
+        </div>
+        <div className="border rounded p-4 h-72 overflow-y-auto mb-4 bg-gray-50">
           {messages.length === 0
             ? <p className="text-gray-400 text-sm">No hay mensajes todavía...</p>
             : messages.map((msg, i) => (
@@ -59,15 +60,15 @@ export default function ChatPage() {
           }
           <div ref={messagesEndRef} />
         </div>
-        <div className="flex gap-2">
+        <form onSubmit={sendMessage} className="flex gap-2">
           <input
             value={message}
             onChange={(e) => setMessage(e.target.value)}
             placeholder="Escribe un mensaje..."
             className="flex-1 border p-2 rounded"
           />
-          <button className="bg-green-500 text-white px-4 py-2 rounded">Enviar</button>
-        </div>
+          <button type="submit" className="bg-green-500 text-white px-4 py-2 rounded">Enviar</button>
+        </form>
       </div>
     </div>
   );
