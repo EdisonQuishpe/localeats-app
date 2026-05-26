@@ -27,10 +27,16 @@ export default function Products() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(form),
     });
-    
+
     const data = await res.json();
     alert(data.message || data.error);
     setForm({ name: "", description: "", price: "" });
+    fetchProducts();
+  };
+
+  const handleDelete = async (id) => {
+    if (!confirm("¿Eliminar este producto?")) return;
+    await fetch(`/api/products/${id}`, { method: "DELETE" });
     fetchProducts();
   };
 
@@ -54,6 +60,7 @@ export default function Products() {
           <h2 className="font-bold">{p.name}</h2>
           <p className="text-sm text-gray-600">{p.description}</p>
           <p className="text-green-600">${p.price}</p>
+          <button onClick={() => handleDelete(p.id)} className="bg-red-500 text-white px-3 py-1 rounded text-sm">Eliminar</button>
         </div>
       ))}
     </div>
