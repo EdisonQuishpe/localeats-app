@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 export default function Products() {
   const [products, setProducts] = useState([]);
   const [form, setForm] = useState({ name: "", description: "", price: "" });
+  const [editingProduct, setEditingProduct] = useState(null);
 
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -40,6 +41,16 @@ export default function Products() {
     fetchProducts();
   };
 
+    const handleEdit = (p) => {
+    setForm({ name: p.name, description: p.description, price: p.price });
+    setEditingProduct(p.id);
+  };
+
+  const handleCancel = () => {
+    setForm({ name: "", description: "", price: "" });
+    setEditingProduct(null);
+  };
+
   useEffect(() => {
     fetchProducts();
   }, []);
@@ -47,6 +58,7 @@ export default function Products() {
   return (
     <div className="p-6 max-w-2xl mx-auto">
       <h1 className="text-2xl font-bold mb-6">Productos</h1>
+      <h2>{editingProduct ? "Editar producto" : "Nuevo producto"}</h2>{editingProduct && (<button type="button" onClick={handleCancel}>Cancelar</button>)}
       <form className="bg-gray-50 p-4 rounded mb-6">
         <input name="name" placeholder="Nombre" value={form.name} onChange={handleChange} className="border p-2 mb-2 rounded w-full" />
         <input name="description" placeholder="Descripción" value={form.description} onChange={handleChange} className="border p-2 mb-2 rounded w-full" />
