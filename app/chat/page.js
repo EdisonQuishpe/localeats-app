@@ -6,6 +6,7 @@ export default function ChatPage() {
   const [message, setMessage] = useState("");
   const [messages, setMessages] = useState([]);
   const [username, setUsername] = useState("Usuario");
+  const [connected, setConnected] = useState(false);
 
   useEffect(() => {
     socket = io();
@@ -42,6 +43,9 @@ export default function ChatPage() {
             onChange={(e) => setUsername(e.target.value)}
             className="border p-2 rounded w-48 text-sm"
           />
+          <span className="ml-2 text-sm text-gray-400">
+            {connected ? "🟢 Conectado" : "🔴 Desconectado"}
+          </span>
           {messages.length === 0
             ? <p className="text-gray-400 text-sm">No hay mensajes todavía...</p>
             : messages.map((msg, i) => (
