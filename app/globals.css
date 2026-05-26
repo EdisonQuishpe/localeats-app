@@ -1,8 +1,15 @@
 @import "tailwindcss";
 
+@custom-variant dark (&:where(.dark, .dark *));
+
 :root {
-  --background: #ffffff;
+  --background: #f8f9fa;
   --foreground: #171717;
+}
+
+.dark {
+  --background: #0a0a0a;
+  --foreground: #ededed;
 }
 
 @theme inline {
@@ -12,15 +19,53 @@
   --font-mono: var(--font-geist-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
-
 body {
   background: var(--background);
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* Light mode overrides */
+html:not(.dark) .bg-zinc-900\/50 {
+  background-color: rgba(255, 255, 255, 0.8);
+}
+html:not(.dark) .bg-zinc-900\/70 {
+  background-color: rgba(255, 255, 255, 0.9);
+}
+html:not(.dark) .border-zinc-800 {
+  border-color: #e4e4e7;
+}
+html:not(.dark) .border-zinc-700 {
+  border-color: #d4d4d8;
+}
+html:not(.dark) .bg-zinc-800\/50 {
+  background-color: rgba(244, 244, 245, 0.8);
+}
+html:not(.dark) .text-white {
+  color: #18181b;
+}
+html:not(.dark) .text-zinc-500 {
+  color: #71717a;
+}
+html:not(.dark) .text-zinc-400 {
+  color: #a1a1aa;
+}
+html:not(.dark) .placeholder-zinc-500::placeholder {
+  color: #a1a1aa;
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+  width: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: #3f3f46;
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #52525b;
 }

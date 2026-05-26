@@ -1,8 +1,11 @@
 "use client";
 import { useState } from "react";
 import Link from "next/link";
+import { motion } from "framer-motion";
+import { useTheme } from "../components/ThemeProvider";
 
 export default function ForgotPassword() {
+  const { t } = useTheme();
   const [form, setForm] = useState({ email: "", newPassword: "" });
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
@@ -16,7 +19,7 @@ export default function ForgotPassword() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!form.email || !form.newPassword) {
-      setError("Completa todos los campos");
+      setError(t("fillAll"));
       return;
     }
     const res = await fetch("/api/forgot-password", {
@@ -29,23 +32,90 @@ export default function ForgotPassword() {
       setMessage(data.message);
       setForm({ email: "", newPassword: "" });
     } else {
-      setError(data.error || "Error al cambiar contraseña");
+      setError(data.error || t("passwordError"));
     }
   };
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-gray-100">
-      <form onSubmit={handleSubmit} className="bg-white p-6 rounded shadow w-80">
-        <h1 className="text-xl font-bold mb-4">Recuperar contraseña</h1>
-        {message && <p className="text-green-600 text-sm mb-3">{message}</p>}
-        {error && <p className="text-red-500 text-sm mb-3">{error}</p>}
-        <input type="email" name="email" placeholder="Correo electrónico" value={form.email} onChange={handleChange} className="w-full mb-2 p-2 border rounded" />
-        <input type="password" name="newPassword" placeholder="Nueva contraseña" value={form.newPassword} onChange={handleChange} className="w-full mb-4 p-2 border rounded" />
-        <button type="submit" className="w-full bg-blue-500 text-white p-2 rounded">Cambiar contraseña</button>
-        <p className="mt-4 text-sm text-center">
-          <Link href="/login" className="text-blue-500 underline">Volver al login</Link>
+    <div className="relative flex items-center justify-center min-h-screen overflow-hidden">
+      <div className="absolute inset-0">
+        <motion.div
+          className="absolute top-[20%] left-[30%] w-80 h-80 rounded-full bg-yellow-500/8 blur-[100px]"
+          animate={{ x: [0, 20, 0], y: [0, -15, 0] }}
+          transition={{ duration: 7, repeat: Infinity, ease: "easeInOut" }}
+        />
+      </div>
+
+      <motion.form
+        initial={{ opacity: 0, y: 30, scale: 0.95 }}
+        animate={{ opacity: 1, y: 0, scale: 1 }}
+        transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+        onSubmit={handleSubmit}
+        className="relative z-10 w-full max-w-sm p-8 rounded-2xl border border-zinc-800 bg-zinc-900/70 backdrop-blur-xl shadow-2xl"
+      >
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.2 }}
+          className="text-center mb-8"
+        >
+          <span className="text-4xl">🔑</span>
+          <h1 className="mt-3 text-2xl font-bold text-white">{t("resetPassword")}</h1>
+        </motion.div>
+
+        {message && (
+          <motion.p
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="text-green-400 text-sm mb-4 p-3 rounded-lg bg-green-500/10 border border-green-500/20"
+          >
+            {message}
+          </motion.p>
+        )}
+        {error && (
+          <motion.p
+            initial={{ opacity: 0, x: -10 }}
+            animate={{ opacity: 1, x: 0 }}
+            className="text-red-400 text-sm mb-4 p-3 rounded-lg bg-red-500/10 border border-red-500/20"
+          >
+            {error}
+          </motion.p>
+        )}
+
+        <div className="space-y-4">
+          <input
+            type="email"
+            name="email"
+            placeholder={t("email")}
+            value={form.email}
+            onChange={handleChange}
+            className="w-full p-3 rounded-xl bg-zinc-800/50 border border-zinc-700 text-white placeholder-zinc-500 focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500/50 transition-all"
+          />
+          <input
+            type="password"
+            name="newPassword"
+            placeholder={t("newPassword")}
+            value={form.newPassword}
+            onChange={handleChange}
+            className="w-full p-3 rounded-xl bg-zinc-800/50 border border-zinc-700 text-white placeholder-zinc-500 focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500/50 transition-all"
+          />
+        </div>
+
+        <motion.button
+          whileHover={{ scale: 1.02, boxShadow: "0 0 20px rgba(249,115,22,0.3)" }}
+          whileTap={{ scale: 0.98 }}
+          type="submit"
+          className="w-full mt-6 py-3 bg-linear-to-r from-orange-500 to-red-500 text-white rounded-xl font-bold shadow-lg shadow-orange-500/20 transition-all"
+        >
+          {t("changePassword")}
+        </motion.button>
+
+        <p className="mt-6 text-center text-sm">
+          <Link href="/login" className="text-orange-400 hover:text-orange-300 transition-colors">
+            {t("backToLogin")}
+          </Link>
         </p>
-      </form>
+      </motion.form>
     </div>
   );
 }
