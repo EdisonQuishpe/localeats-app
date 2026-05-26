@@ -5,6 +5,7 @@ import Link from "next/link";
 export default function ChatPage() {
   const [message, setMessage] = useState("");
   const [messages, setMessages] = useState([]);
+  const [username, setUsername] = useState("Usuario");
 
   useEffect(() => {
     socket = io();
@@ -35,6 +36,12 @@ export default function ChatPage() {
           <Link href="/dashboard" className="text-blue-500 underline text-sm">Volver</Link>
         </div>
         <div className="border rounded p-4 h-72 bg-gray-50 mb-4">
+          <input
+            placeholder="Tu nombre"
+            value={username}
+            onChange={(e) => setUsername(e.target.value)}
+            className="border p-2 rounded w-48 text-sm"
+          />
           {messages.length === 0
             ? <p className="text-gray-400 text-sm">No hay mensajes todavía...</p>
             : messages.map((msg, i) => (
