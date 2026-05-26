@@ -7,6 +7,7 @@ export default function ChatPage() {
   const [messages, setMessages] = useState([]);
   const [username, setUsername] = useState("Usuario");
   const [connected, setConnected] = useState(false);
+  const messagesEndRef = useRef(null);
 
   useEffect(() => {
     socket = io();
@@ -21,6 +22,10 @@ export default function ChatPage() {
 
     return () => { socket.disconnect(); };
   }, []);
+
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages]);
 
   const sendMessage = (e) => {
     e.preventDefault();
@@ -52,6 +57,7 @@ export default function ChatPage() {
                 <div key={i} className="mb-2 bg-blue-100 p-2 rounded text-sm">{msg}</div>
               ))
           }
+          <div ref={messagesEndRef} />
         </div>
         <div className="flex gap-2">
           <input
