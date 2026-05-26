@@ -2,20 +2,59 @@ import { PrismaClient } from "@prisma/client";
 
 const prisma = new PrismaClient();
 
+// 🔎 Obtener un producto por ID
+export async function GET(req, context) {
+  try {
+    const { id } = context.params;
+    const productId = parseInt(id, 10);
+
+    if (Number.isNaN(productId)) {
+      return Response.json({ error: "ID inválido" }, { status: 400 });
+    }
+
+    const product = await prisma.product.findUnique({
+      where: { id: productId },
+    });
+
+    if (!product) {
+      return Response.json({ error: "Producto no encontrado" }, { status: 404 });
+    }
+
+    return Response.json(product);
+  } catch (error) {
+    console.error("ERROR GET:", error);
+    return Response.json({ error: "Error en servidor" }, { status: 500 });
+  }
+}
+
 // ✏️ EDITAR producto
 export async function PUT(req, context) {
   try {
-    const { id } = await context.params; 
+    const { id } = context.params;
+    const productId = parseInt(id, 10);
+
+    if (Number.isNaN(productId)) {
+      return Response.json({ error: "ID inválido" }, { status: 400 });
+    }
 
     const body = await req.json();
     const { name, description, price } = body;
 
+    if (!name || !description || price === undefined || price === null) {
+      return Response.json({ error: "Campos requeridos" }, { status: 400 });
+    }
+
+    const numericPrice = Number(price);
+    if (Number.isNaN(numericPrice) || numericPrice < 0) {
+      return Response.json({ error: "Precio inválido" }, { status: 400 });
+    }
+
     const product = await prisma.product.update({
-      where: { id: parseInt(id) },
+      where: { id: productId },
       data: {
         name,
         description,
-        price: parseFloat(price),
+        price: numericPrice,
       },
     });
 
@@ -30,12 +69,15 @@ export async function PUT(req, context) {
 // 🗑️ ELIMINAR producto
 export async function DELETE(req, context) {
   try {
-    const { id } = await context.params; 
+    const { id } = context.params;
+    const productId = parseInt(id, 10);
 
-    console.log("ID:", id);
+    if (Number.isNaN(productId)) {
+      return Response.json({ error: "ID inválido" }, { status: 400 });
+    }
 
     await prisma.product.delete({
-      where: { id: parseInt(id) },
+      where: { id: productId },
     });
 
     return Response.json({ message: "Producto eliminado" });

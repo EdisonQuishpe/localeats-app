@@ -19,19 +19,24 @@ export async function POST(req) {
     const body = await req.json();
     const { name, description, price } = body;
 
-    if (!name || !description || !price) {
+    if (!name || !description || price === undefined || price === null) {
       return Response.json({ error: "Campos requeridos" }, { status: 400 });
+    }
+
+    const numericPrice = Number(price);
+    if (Number.isNaN(numericPrice) || numericPrice < 0) {
+      return Response.json({ error: "Precio inválido" }, { status: 400 });
     }
 
     const product = await prisma.product.create({
       data: {
         name,
         description,
-        price: parseFloat(price),
+        price: numericPrice,
       },
     });
 
-    return Response.json({ message: "Producto creado", product });
+    return Response.json({ message: "Producto creado", product }, { status: 201 });
 
   } catch (error) {
     console.error(error);
