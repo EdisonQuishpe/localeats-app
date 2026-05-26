@@ -1,11 +1,20 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { useTheme } from "./ThemeProvider";
+import { useAuth } from "./AuthProvider";
 
 export default function Navbar() {
   const { theme, toggleTheme, locale, toggleLocale, t } = useTheme();
+  const { isAuthenticated, user, logout } = useAuth();
+  const router = useRouter();
+
+  const handleLogout = () => {
+    logout();
+    router.push("/login");
+  };
 
   return (
     <motion.nav
@@ -22,6 +31,37 @@ export default function Navbar() {
       </Link>
 
       <div className="flex items-center gap-3">
+        {/* Auth buttons */}
+        {isAuthenticated ? (
+          <div className="flex items-center gap-2">
+            <Link href="/dashboard">
+              <motion.span
+                whileHover={{ scale: 1.05 }}
+                className="px-3 py-1.5 rounded-lg text-xs font-bold text-orange-400 border border-orange-500/30 bg-orange-500/10 hover:bg-orange-500/20 transition-colors cursor-pointer"
+              >
+                {user?.name || "Dashboard"}
+              </motion.span>
+            </Link>
+            <motion.button
+              whileHover={{ scale: 1.1 }}
+              whileTap={{ scale: 0.9 }}
+              onClick={handleLogout}
+              className="px-3 py-1.5 rounded-lg text-xs font-bold border border-red-500/30 bg-red-500/10 text-red-400 hover:bg-red-500/20 transition-colors"
+            >
+              Salir
+            </motion.button>
+          </div>
+        ) : (
+          <Link href="/login">
+            <motion.span
+              whileHover={{ scale: 1.05 }}
+              className="px-3 py-1.5 rounded-lg text-xs font-bold text-orange-400 border border-orange-500/30 bg-orange-500/10 hover:bg-orange-500/20 transition-colors cursor-pointer"
+            >
+              Ingresar
+            </motion.span>
+          </Link>
+        )}
+
         {/* Language toggle */}
         <motion.button
           whileHover={{ scale: 1.1 }}

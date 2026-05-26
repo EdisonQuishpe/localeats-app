@@ -2,14 +2,18 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
+import { DotLottieReact } from "@lottiefiles/dotlottie-react";
 import { useTheme } from "../components/ThemeProvider";
+import { ProtectedRoute } from "../components/AuthProvider";
 
-export default function Products() {
-  const { t } = useTheme();
+function ProductsContent() {
+  const { t, theme } = useTheme();
+  const isDark = theme === "dark";
   const [products, setProducts] = useState([]);
   const [editingProduct, setEditingProduct] = useState(null);
   const [loading, setLoading] = useState(false);
   const [form, setForm] = useState({ name: "", description: "", price: "" });
+  const [deleteDialog, setDeleteDialog] = useState({ open: false, product: null });
 
   const fetchProducts = async () => {
     setLoading(true);
@@ -44,9 +48,13 @@ export default function Products() {
   };
 
   const handleDelete = async (id) => {
-    if (!confirm(t("confirmDelete"))) return;
     await fetch(`/api/products/${id}`, { method: "DELETE" });
+    setDeleteDialog({ open: false, product: null });
     fetchProducts();
+  };
+
+  const confirmDelete = (product) => {
+    setDeleteDialog({ open: true, product });
   };
 
   const handleEdit = (p) => {
@@ -152,9 +160,27 @@ export default function Products() {
             <p className="mt-3 text-zinc-500">{t("loadingProducts")}</p>
           </motion.div>
         ) : products.length === 0 ? (
-          <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-center text-zinc-500 py-12">
-            {t("noProducts")}
-          </motion.p>
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6 }}
+            className="flex flex-col items-center py-12"
+          >
+            <div className="w-56 h-56">
+              <DotLottieReact
+                src="/animations/shopping cart.lottie"
+                autoplay
+                loop
+                style={{ width: "100%", height: "100%" }}
+              />
+            </div>
+            <p className="mt-4 text-lg font-semibold text-zinc-400 dark:text-zinc-500">
+              {t("noProducts")}
+            </p>
+            <p className="text-sm text-zinc-500 dark:text-zinc-600 mt-1">
+              Agrega tu primer producto usando el formulario de arriba ☝️
+            </p>
+          </motion.div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <AnimatePresence>
@@ -187,7 +213,7 @@ export default function Products() {
                       <motion.button
                         whileHover={{ scale: 1.1 }}
                         whileTap={{ scale: 0.9 }}
-                        onClick={() => handleDelete(p.id)}
+                        onClick={() => confirmDelete(p)}
                         className="p-2 rounded-lg bg-red-500/10 text-red-400 hover:bg-red-500/20 transition-colors"
                       >
                         🗑️
@@ -200,6 +226,84 @@ export default function Products() {
           </div>
         )}
       </div>
+
+      {/* Delete Confirmation Dialog */}
+      <AnimatePresence>
+        {deleteDialog.open && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center px-4"
+          >
+            {/* Backdrop */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setDeleteDialog({ open: false, product: null })}
+              className={`absolute inset-0 ${isDark ? "bg-black/60" : "bg-black/40"} backdrop-blur-sm`}
+            />
+
+            {/* Dialog */}
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.9, y: 20 }}
+              transition={{ type: "spring", stiffness: 300, damping: 25 }}
+              className={`relative w-full max-w-sm p-6 rounded-2xl border shadow-2xl ${isDark ? "bg-zinc-900 border-zinc-700 shadow-black/50" : "bg-white border-zinc-200 shadow-zinc-300/50"}`}
+            >
+              {/* Icon */}
+              <div className="flex justify-center mb-4">
+                <motion.div
+                  initial={{ rotate: 0 }}
+                  animate={{ rotate: [0, -10, 10, -5, 5, 0] }}
+                  transition={{ delay: 0.2, duration: 0.5 }}
+                  className={`w-14 h-14 rounded-full flex items-center justify-center ${isDark ? "bg-red-500/10" : "bg-red-50"}`}
+                >
+                  <span className="text-3xl">🗑️</span>
+                </motion.div>
+              </div>
+
+              {/* Content */}
+              <h3 className={`text-lg font-bold text-center ${isDark ? "text-white" : "text-zinc-900"}`}>
+                ¿Eliminar producto?
+              </h3>
+              <p className={`text-sm text-center mt-2 ${isDark ? "text-zinc-400" : "text-zinc-500"}`}>
+                Estás a punto de eliminar <span className={`font-semibold ${isDark ? "text-orange-400" : "text-orange-600"}`}>{deleteDialog.product?.name}</span>. Esta acción no se puede deshacer.
+              </p>
+
+              {/* Buttons */}
+              <div className="flex gap-3 mt-6">
+                <motion.button
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  onClick={() => setDeleteDialog({ open: false, product: null })}
+                  className={`flex-1 px-4 py-2.5 rounded-xl font-semibold text-sm transition-colors ${isDark ? "bg-zinc-800 text-zinc-300 hover:bg-zinc-700 border border-zinc-700" : "bg-zinc-100 text-zinc-700 hover:bg-zinc-200 border border-zinc-200"}`}
+                >
+                  Cancelar
+                </motion.button>
+                <motion.button
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  onClick={() => handleDelete(deleteDialog.product?.id)}
+                  className="flex-1 px-4 py-2.5 rounded-xl font-semibold text-sm bg-red-500 text-white hover:bg-red-600 transition-colors shadow-lg shadow-red-500/20"
+                >
+                  Eliminar
+                </motion.button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
+  );
+}
+
+export default function Products() {
+  return (
+    <ProtectedRoute>
+      <ProductsContent />
+    </ProtectedRoute>
   );
 }

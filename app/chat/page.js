@@ -4,10 +4,11 @@ import { io } from "socket.io-client";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import { useTheme } from "../components/ThemeProvider";
+import { ProtectedRoute } from "../components/AuthProvider";
 
 let socket;
 
-export default function ChatPage() {
+function ChatContent() {
   const { t } = useTheme();
   const [message, setMessage] = useState("");
   const [messages, setMessages] = useState([]);
@@ -150,5 +151,13 @@ export default function ChatPage() {
         </motion.div>
       </div>
     </div>
+  );
+}
+
+export default function ChatPage() {
+  return (
+    <ProtectedRoute>
+      <ChatContent />
+    </ProtectedRoute>
   );
 }

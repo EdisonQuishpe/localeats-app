@@ -5,7 +5,7 @@ const prisma = new PrismaClient();
 // 🔎 Obtener un producto por ID
 export async function GET(req, context) {
   try {
-    const { id } = context.params;
+    const { id } = await context.params;
     const productId = parseInt(id, 10);
 
     if (Number.isNaN(productId)) {
@@ -30,7 +30,7 @@ export async function GET(req, context) {
 // ✏️ EDITAR producto
 export async function PUT(req, context) {
   try {
-    const { id } = context.params;
+    const { id } = await context.params;
     const productId = parseInt(id, 10);
 
     if (Number.isNaN(productId)) {
@@ -69,7 +69,7 @@ export async function PUT(req, context) {
 // 🗑️ ELIMINAR producto
 export async function DELETE(req, context) {
   try {
-    const { id } = context.params;
+    const { id } = await context.params;
     const productId = parseInt(id, 10);
 
     if (Number.isNaN(productId)) {

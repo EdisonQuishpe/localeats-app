@@ -2,15 +2,20 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
+import { DotLottieReact } from "@lottiefiles/dotlottie-react";
 import { useTheme } from "../components/ThemeProvider";
+import { useAuth } from "../components/AuthProvider";
 
 export default function Login() {
   const router = useRouter();
-  const { t } = useTheme();
+  const { t, theme } = useTheme();
+  const isDark = theme === "dark";
+  const { login } = useAuth();
   const [form, setForm] = useState({ email: "", password: "" });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [showSuccess, setShowSuccess] = useState(false);
 
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -32,7 +37,11 @@ export default function Login() {
     const data = await res.json();
     setLoading(false);
     if (data.user) {
-      router.push("/dashboard");
+      login(data.user);
+      setShowSuccess(true);
+      setTimeout(() => {
+        router.push("/dashboard");
+      }, 3500);
     } else {
       setError(data.error || t("wrongCredentials"));
     }
@@ -40,6 +49,102 @@ export default function Login() {
 
   return (
     <div className="relative flex items-center justify-center min-h-screen overflow-hidden">
+      {/* Success Animation Overlay */}
+      <AnimatePresence>
+        {showSuccess && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex flex-col items-center justify-center"
+          >
+            {/* Animated background - adapts to theme */}
+            <motion.div
+              initial={{ scale: 0 }}
+              animate={{ scale: 1 }}
+              transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+              className={`absolute inset-0 ${isDark ? "bg-linear-to-br from-black via-zinc-900 to-black" : "bg-linear-to-br from-white via-orange-50 to-amber-50"}`}
+            />
+
+            {/* Particle rings */}
+            <motion.div
+              initial={{ opacity: 0, scale: 0.8, rotate: 0 }}
+              animate={{ opacity: [0, 0.4, 0], scale: [0.8, 1.5], rotate: 180 }}
+              transition={{ delay: 0.3, duration: 2, ease: "easeOut" }}
+              className={`absolute w-96 h-96 rounded-full border-2 border-dashed ${isDark ? "border-orange-400/30" : "border-orange-400/40"}`}
+            />
+            <motion.div
+              initial={{ opacity: 0, scale: 0.8, rotate: 0 }}
+              animate={{ opacity: [0, 0.3, 0], scale: [0.8, 2], rotate: -120 }}
+              transition={{ delay: 0.5, duration: 2.5, ease: "easeOut" }}
+              className={`absolute w-80 h-80 rounded-full border ${isDark ? "border-amber-300/20" : "border-orange-300/30"}`}
+            />
+
+            {/* Lottie animation - bigger */}
+            <motion.div
+              initial={{ opacity: 0, y: 30 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.1, ease: [0.16, 1, 0.3, 1] }}
+              className="relative z-10 w-80 h-80 md:w-96 md:h-96"
+            >
+              <DotLottieReact
+                src="/animations/Food delivered.lottie"
+                autoplay
+                loop={false}
+                style={{ width: "100%", height: "100%" }}
+              />
+            </motion.div>
+
+            {/* Text content */}
+            <motion.div
+              initial={{ opacity: 0, y: 30 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.6, duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+              className="relative z-10 text-center mt-2"
+            >
+              <h2 className={`text-3xl md:text-4xl font-black bg-linear-to-r from-orange-500 via-red-500 to-amber-500 bg-clip-text text-transparent`}>
+                ¡Bienvenido de vuelta!
+              </h2>
+              <motion.p
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 1 }}
+                className={`text-base mt-3 flex items-center justify-center gap-2 ${isDark ? "text-zinc-400" : "text-zinc-600"}`}
+              >
+                <motion.span
+                  animate={{ rotate: [0, 15, -15, 0] }}
+                  transition={{ delay: 1.2, duration: 0.5 }}
+                >
+                  🍔
+                </motion.span>
+                Preparando tu experiencia gastronómica...
+                <motion.span
+                  animate={{ rotate: [0, -15, 15, 0] }}
+                  transition={{ delay: 1.4, duration: 0.5 }}
+                >
+                  🔥
+                </motion.span>
+              </motion.p>
+            </motion.div>
+
+            {/* Loading bar */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 1.2 }}
+              className={`relative z-10 mt-8 w-48 h-1.5 rounded-full overflow-hidden ${isDark ? "bg-zinc-800" : "bg-zinc-200"}`}
+            >
+              <motion.div
+                initial={{ width: "0%" }}
+                animate={{ width: "100%" }}
+                transition={{ delay: 1.3, duration: 1.2, ease: "easeInOut" }}
+                className="h-full bg-linear-to-r from-orange-500 to-amber-400 rounded-full"
+              />
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* Background effects */}
       <div className="absolute inset-0">
         <motion.div
