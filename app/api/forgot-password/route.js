@@ -16,9 +16,21 @@ export async function POST(req) {
       );
     }
 
+    const trimmedEmail = String(email).trim();
+    const trimmedPassword = String(newPassword);
+
+    if (trimmedPassword.length < 6) {
+      return Response.json({ error: "La contraseña debe tener al menos 6 caracteres" }, { status: 400 });
+    }
+
+    const emailRegex = /^[^@\s]+@[^@\s]+\.[^@\s]+$/;
+    if (!emailRegex.test(trimmedEmail)) {
+      return Response.json({ error: "Email inválido" }, { status: 400 });
+    }
+
     const user = await prisma.user.findUnique({
       where: {
-        email,
+        email: trimmedEmail,
       },
     });
 
@@ -33,7 +45,7 @@ export async function POST(req) {
 
     await prisma.user.update({
       where: {
-        email,
+        email: trimmedEmail,
       },
       data: {
         password: hashedPassword,

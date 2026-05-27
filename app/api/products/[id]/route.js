@@ -6,14 +6,17 @@ const prisma = new PrismaClient();
 export async function GET(req, context) {
   try {
     const { id } = await context.params;
-    const productId = parseInt(id, 10);
+    const productId = Number(id);
 
-    if (Number.isNaN(productId)) {
+    if (Number.isNaN(productId) || productId <= 0) {
       return Response.json({ error: "ID inválido" }, { status: 400 });
     }
 
     const product = await prisma.product.findUnique({
       where: { id: productId },
+      include: {
+        user: { select: { id: true, name: true } },
+      },
     });
 
     if (!product) {

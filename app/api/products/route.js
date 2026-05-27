@@ -5,7 +5,18 @@ const prisma = new PrismaClient();
 // 🔍 Obtener productos
 export async function GET() {
   try {
-    const products = await prisma.product.findMany();
+    const products = await prisma.product.findMany({
+      include: {
+        user: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
+      },
+      orderBy: { createdAt: "desc" },
+    });
+
     return Response.json(products);
   } catch (error) {
     console.error(error);

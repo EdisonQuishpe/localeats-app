@@ -93,9 +93,14 @@ export async function GET(req) {
       );
     }
 
+    const conversationIdNumber = Number(conversationId);
+    if (Number.isNaN(conversationIdNumber) || conversationIdNumber <= 0) {
+      return Response.json({ error: "conversationId inválido" }, { status: 400 });
+    }
+
     const messages = await prisma.message.findMany({
       where: {
-        conversationId: parseInt(conversationId),
+        conversationId: conversationIdNumber,
       },
       include: {
         user: {

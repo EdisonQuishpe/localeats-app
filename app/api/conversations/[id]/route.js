@@ -6,10 +6,15 @@ const prisma = new PrismaClient();
 export async function GET(req, context) {
   try {
     const { id } = await context.params;
+    const conversationId = Number(id);
+
+    if (Number.isNaN(conversationId) || conversationId <= 0) {
+      return Response.json({ error: "ID inválido" }, { status: 400 });
+    }
 
     const conversation = await prisma.conversation.findUnique({
       where: {
-        id: parseInt(id),
+        id: conversationId,
       },
       include: {
         messages: {
@@ -50,10 +55,20 @@ export async function GET(req, context) {
 export async function PATCH(req, context) {
   try {
     const { id } = await context.params;
+    const conversationId = Number(id);
+
+    if (Number.isNaN(conversationId) || conversationId <= 0) {
+      return Response.json({ error: "ID inválido" }, { status: 400 });
+    }
+
+    const exists = await prisma.conversation.findUnique({ where: { id: conversationId } });
+    if (!exists) {
+      return Response.json({ error: "Conversación no encontrada" }, { status: 404 });
+    }
 
     const conversation = await prisma.conversation.update({
       where: {
-        id: parseInt(id),
+        id: conversationId,
       },
       data: {
         status: "closed",
