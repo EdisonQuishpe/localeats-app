@@ -16,8 +16,13 @@ app.prepare().then(() => {
   io.on("connection", (socket) => {
     console.log("Usuario conectado:", socket.id);
 
-    socket.on("chat-message", (message) => {
-      io.emit("chat-message", message);
+    socket.on("join-conversation", (conversationId) => {
+      socket.join(`conversation-${conversationId}`);
+      console.log(`Socket ${socket.id} unido a conversación ${conversationId}`);
+    });
+
+    socket.on("support-message", ({ conversationId, message }) => {
+      io.to(`conversation-${conversationId}`).emit("support-message", message);
     });
 
     socket.on("disconnect", () => {

@@ -3,7 +3,7 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlite"
+  provider = "mysql"
   url      = env("DATABASE_URL")
 }
 
@@ -28,120 +28,49 @@ enum PaymentStatus {
 }
 
 model User {
-  id         Int       @id @default(autoincrement())
-  name       String?
-  email      String    @unique
-  password   String
-  role       Role      @default(USER)
-  isActive   Boolean   @default(true)
-  createdAt  DateTime  @default(now())
-  updatedAt  DateTime? @updatedAt
+  id        Int      @id @default(autoincrement())
+  name      String
+  email     String   @unique
+  password  String
+  role      String   @default("user")
+  createdAt DateTime @default(now())
 
-  profile    Profile?
-  addresses  Address[]
-  orders     Order[]
-  reviews    Review[]
-  messages   ChatMessage[]
-}
-
-model Profile {
-  id        Int    @id @default(autoincrement())
-  bio       String?
-  avatarUrl String?
-  user      User   @relation(fields: [userId], references: [id])
-  userId    Int    @unique
-}
-
-model Address {
-  id         Int     @id @default(autoincrement())
-  label      String? // e.g., Home, Work
-  street     String
-  city       String
-  state      String?
-  postalCode String?
-  country    String
-  isPrimary  Boolean @default(false)
-  user       User    @relation(fields: [userId], references: [id])
-  userId     Int
-}
-
-model Category {
-  id       Int       @id @default(autoincrement())
-  name     String    @unique
-  slug     String    @unique
   products Product[]
+  messages Message[]
 }
 
 model Product {
-  id          Int            @id @default(autoincrement())
+  id          Int      @id @default(autoincrement())
   name        String
   slug        String?        @unique
   description String
   price       Float
-  sku         String?
-  quantity    Int?           @default(0)
-  isActive    Boolean        @default(true)
-  createdAt   DateTime       @default(now())
-  updatedAt   DateTime?      @updatedAt
+  imageUrl    String?
+  available   Boolean  @default(true)
+  createdAt   DateTime @default(now())
 
-  category    Category?      @relation(fields: [categoryId], references: [id])
-  categoryId  Int?
-  images      ProductImage[]
-  reviews     Review[]
-  orderItems  OrderItem[]
+  userId Int?
+  user   User? @relation(fields: [userId], references: [id])
 }
 
-model ProductImage {
-  id        Int     @id @default(autoincrement())
-  url       String
-  altText   String?
-  product   Product @relation(fields: [productId], references: [id])
-  productId Int
-}
-
-model Order {
-  id            Int           @id @default(autoincrement())
-  user          User          @relation(fields: [userId], references: [id])
-  userId        Int
-  status        OrderStatus   @default(PENDING)
-  paymentStatus PaymentStatus @default(PENDING)
-  total         Float
-  createdAt     DateTime      @default(now())
-  updatedAt     DateTime?     @updatedAt
-
-  items         OrderItem[]
-  shippingTo    Address?      @relation(fields: [shippingToId], references: [id])
-  shippingToId  Int?
-}
-
-model OrderItem {
-  id         Int     @id @default(autoincrement())
-  order      Order   @relation(fields: [orderId], references: [id])
-  orderId    Int
-  product    Product @relation(fields: [productId], references: [id])
-  productId  Int
-  quantity   Int     @default(1)
-  unitPrice  Float
-}
-
-model Review {
+model Conversation {
   id        Int      @id @default(autoincrement())
-  user      User     @relation(fields: [userId], references: [id])
-  userId    Int
-  product   Product  @relation(fields: [productId], references: [id])
-  productId Int
-  rating    Int
-  comment   String?
+  subject   String
+  status    String   @default("open")
   createdAt DateTime @default(now())
+
+  messages Message[]
 }
 
-model ChatMessage {
-  id        Int       @id @default(autoincrement())
-  sender    User?     @relation(fields: [senderId], references: [id])
-  senderId  Int?
-  content   String
-  createdAt DateTime  @default(now())
-}
+model Message {
+  id         Int      @id @default(autoincrement())
+  content    String
+  senderRole String
+  createdAt  DateTime @default(now())
 
-// Índices y extras
-@@index([Product.slug])
+  userId Int?
+  user   User? @relation(fields: [userId], references: [id])
+
+  conversationId Int
+  conversation   Conversation @relation(fields: [conversationId], references: [id])
+}
