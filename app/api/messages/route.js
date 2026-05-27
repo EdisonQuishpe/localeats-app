@@ -22,6 +22,16 @@ export async function POST(req) {
         conversationId: parseInt(conversationId),
         userId: userId ? parseInt(userId) : null,
       },
+      include: {
+        user: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+          },
+        },
+        conversation: true,
+      },
     });
 
     return Response.json({
@@ -53,6 +63,15 @@ export async function GET(req) {
     const messages = await prisma.message.findMany({
       where: {
         conversationId: parseInt(conversationId),
+      },
+      include: {
+        user: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+          },
+        },
       },
       orderBy: {
         createdAt: "asc",
