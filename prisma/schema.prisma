@@ -7,26 +7,6 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-enum Role {
-  USER
-  ADMIN
-}
-
-enum OrderStatus {
-  PENDING
-  CONFIRMED
-  SHIPPED
-  DELIVERED
-  CANCELED
-}
-
-enum PaymentStatus {
-  PENDING
-  PAID
-  FAILED
-  REFUNDED
-}
-
 model User {
   id        Int      @id @default(autoincrement())
   name      String
@@ -42,7 +22,6 @@ model User {
 model Product {
   id          Int      @id @default(autoincrement())
   name        String
-  slug        String?        @unique
   description String
   price       Float
   imageUrl    String?
