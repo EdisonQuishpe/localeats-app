@@ -4,10 +4,11 @@ import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import { DotLottieReact } from "@lottiefiles/dotlottie-react";
 import { useTheme } from "../components/ThemeProvider";
-import { ProtectedRoute } from "../components/AuthProvider";
+import { ProtectedRoute, useAuth } from "../components/AuthProvider";
 
 function ProductsContent() {
   const { t, theme } = useTheme();
+  const { user } = useAuth();
   const isDark = theme === "dark";
   const [products, setProducts] = useState([]);
   const [editingProduct, setEditingProduct] = useState(null);
@@ -35,20 +36,49 @@ function ProductsContent() {
       alert(t("fillAll"));
       return;
     }
+
+    if (!user?.id) {
+      alert("Usuario no autenticado");
+      return;
+    }
+
     const url = editingProduct ? `/api/products/${editingProduct}` : "/api/products";
     const method = editingProduct ? "PUT" : "POST";
-    await fetch(url, {
+    const response = await fetch(url, {
       method,
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(form),
+      body: JSON.stringify({ ...form, userId: user.id }),
     });
+
+    const data = await response.json();
+    if (!response.ok) {
+      alert(data.error || "Error al guardar el producto");
+      return;
+    }
+
     setForm({ name: "", description: "", price: "" });
     setEditingProduct(null);
     fetchProducts();
   };
 
   const handleDelete = async (id) => {
-    await fetch(`/api/products/${id}`, { method: "DELETE" });
+    if (!user?.id) {
+      alert("Usuario no autenticado");
+      return;
+    }
+
+    const response = await fetch(`/api/products/${id}`, {
+      method: "DELETE",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ userId: user.id }),
+    });
+
+    const data = await response.json();
+    if (!response.ok) {
+      alert(data.error || "Error al eliminar el producto");
+      return;
+    }
+
     setDeleteDialog({ open: false, product: null });
     fetchProducts();
   };
@@ -195,30 +225,43 @@ function ProductsContent() {
                 >
                   <div className="flex justify-between items-start">
                     <div className="flex-1">
-                      <h3 className="font-bold text-white text-lg">{p.name}</h3>
+                      <div className="flex items-center gap-2">
+                        <h3 className="font-bold text-white text-lg">{p.name}</h3>
+                        {p.userId === user?.id ? (
+                          <span className="px-2 py-1 text-[11px] font-semibold uppercase rounded-full bg-emerald-500 text-black">
+                            Tu producto
+                          </span>
+                        ) : (
+                          <span className="px-2 py-1 text-[11px] font-semibold uppercase rounded-full bg-zinc-700 text-zinc-200">
+                            Otro vendedor
+                          </span>
+                        )}
+                      </div>
                       <p className="text-sm text-zinc-500 mt-1">{p.description}</p>
                       <p className="mt-2 text-xl font-black bg-linear-to-r from-green-400 to-emerald-400 bg-clip-text text-transparent">
                         ${p.price}
                       </p>
                     </div>
-                    <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                      <motion.button
-                        whileHover={{ scale: 1.1 }}
-                        whileTap={{ scale: 0.9 }}
-                        onClick={() => handleEdit(p)}
-                        className="p-2 rounded-lg bg-amber-500/10 text-amber-400 hover:bg-amber-500/20 transition-colors"
-                      >
-                        ✏️
-                      </motion.button>
-                      <motion.button
-                        whileHover={{ scale: 1.1 }}
-                        whileTap={{ scale: 0.9 }}
-                        onClick={() => confirmDelete(p)}
-                        className="p-2 rounded-lg bg-red-500/10 text-red-400 hover:bg-red-500/20 transition-colors"
-                      >
-                        🗑️
-                      </motion.button>
-                    </div>
+                    {p.userId === user?.id && (
+                      <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <motion.button
+                          whileHover={{ scale: 1.1 }}
+                          whileTap={{ scale: 0.9 }}
+                          onClick={() => handleEdit(p)}
+                          className="p-2 rounded-lg bg-amber-500/10 text-amber-400 hover:bg-amber-500/20 transition-colors"
+                        >
+                          ✏️
+                        </motion.button>
+                        <motion.button
+                          whileHover={{ scale: 1.1 }}
+                          whileTap={{ scale: 0.9 }}
+                          onClick={() => confirmDelete(p)}
+                          className="p-2 rounded-lg bg-red-500/10 text-red-400 hover:bg-red-500/20 transition-colors"
+                        >
+                          🗑️
+                        </motion.button>
+                      </div>
+                    )}
                   </div>
                 </motion.div>
               ))}

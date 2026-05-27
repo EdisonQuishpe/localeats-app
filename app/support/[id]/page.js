@@ -4,10 +4,11 @@ import { useEffect, useState } from "react";
 import { io } from "socket.io-client";
 import { useParams } from "next/navigation";
 import Link from "next/link";
+import { ProtectedRoute } from "../../components/AuthProvider";
 
 let socket;
 
-export default function SupportDetailPage() {
+function SupportDetailPage() {
   const params = useParams();
   const conversationId = params.id;
 
@@ -83,8 +84,9 @@ export default function SupportDetailPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-100 p-6 text-black">
-      <div className="max-w-3xl mx-auto bg-white p-6 rounded shadow">
+    <ProtectedRoute>
+      <div className="min-h-screen bg-gray-100 p-6 text-black">
+        <div className="max-w-3xl mx-auto bg-white p-6 rounded shadow">
         <Link href="/support" className="text-blue-500 underline">
           Volver a soporte
         </Link>
@@ -137,3 +139,5 @@ export default function SupportDetailPage() {
     </div>
   );
 }
+
+export default SupportDetailPage;

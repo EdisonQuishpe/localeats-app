@@ -30,16 +30,18 @@ export async function POST(req) {
     const body = await req.json();
     const { subject } = body;
 
-    if (!subject) {
-      return Response.json(
-        { error: "El asunto es obligatorio" },
-        { status: 400 }
-      );
+    const trimmed = String(subject || "").trim();
+    if (!trimmed) {
+      return Response.json({ error: "El asunto es obligatorio" }, { status: 400 });
+    }
+
+    if (trimmed.length > 200) {
+      return Response.json({ error: "El asunto es demasiado largo" }, { status: 400 });
     }
 
     const conversation = await prisma.conversation.create({
       data: {
-        subject,
+        subject: trimmed,
       },
     });
 

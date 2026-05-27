@@ -15,12 +15,45 @@ export async function POST(req) {
       );
     }
 
+    if (!['user', 'support'].includes(senderRole)) {
+      return Response.json(
+        { error: "senderRole inválido" },
+        { status: 400 }
+      );
+    }
+
+    const conversationIdNumber = Number(conversationId);
+    if (Number.isNaN(conversationIdNumber) || conversationIdNumber <= 0) {
+      return Response.json(
+        { error: "conversationId inválido" },
+        { status: 400 }
+      );
+    }
+
+    let ownerId = null;
+    if (senderRole === 'user') {
+      if (!userId) {
+        return Response.json(
+          { error: "userId es obligatorio para mensajes de usuario" },
+          { status: 400 }
+        );
+      }
+
+      ownerId = Number(userId);
+      if (Number.isNaN(ownerId) || ownerId <= 0) {
+        return Response.json(
+          { error: "userId inválido" },
+          { status: 400 }
+        );
+      }
+    }
+
     const message = await prisma.message.create({
       data: {
         content,
         senderRole,
-        conversationId: parseInt(conversationId),
-        userId: userId ? parseInt(userId) : null,
+        conversationId: conversationIdNumber,
+        userId: ownerId,
       },
       include: {
         user: {
@@ -60,9 +93,14 @@ export async function GET(req) {
       );
     }
 
+    const conversationIdNumber = Number(conversationId);
+    if (Number.isNaN(conversationIdNumber) || conversationIdNumber <= 0) {
+      return Response.json({ error: "conversationId inválido" }, { status: 400 });
+    }
+
     const messages = await prisma.message.findMany({
       where: {
-        conversationId: parseInt(conversationId),
+        conversationId: conversationIdNumber,
       },
       include: {
         user: {

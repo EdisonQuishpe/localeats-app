@@ -7,13 +7,23 @@ export async function POST(req) {
   try {
     const body = await req.json();
     const { name, email, password } = body;
+    const trimmedEmail = String(email || "").trim();
 
-    if (!name || !email || !password) {
+    if (!name || !trimmedEmail || !password) {
       return Response.json({ error: "Campos requeridos" }, { status: 400 });
     }
 
+    if (String(password).length < 6) {
+      return Response.json({ error: "La contraseña debe tener al menos 6 caracteres" }, { status: 400 });
+    }
+
+    const emailRegex = /^[^@\s]+@[^@\s]+\.[^@\s]+$/;
+    if (!emailRegex.test(trimmedEmail)) {
+      return Response.json({ error: "Email inválido" }, { status: 400 });
+    }
+
     const existingUser = await prisma.user.findUnique({
-      where: { email },
+      where: { email: trimmedEmail },
     });
 
     if (existingUser) {
@@ -25,12 +35,16 @@ export async function POST(req) {
     const user = await prisma.user.create({
       data: {
         name,
-        email,
+        email: trimmedEmail,
         password: hashedPassword,
       },
     });
 
-    return Response.json({ message: "Usuario creado", user });
+    // Do not return password hash to the client
+    return Response.json({
+      message: "Usuario creado",
+      user: { id: user.id, name: user.name, email: user.email },
+    });
 
   } catch (error) {
     console.error(error);
