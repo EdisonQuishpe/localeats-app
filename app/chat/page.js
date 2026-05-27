@@ -5,7 +5,7 @@ import { io } from "socket.io-client";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import { useTheme } from "../components/ThemeProvider";
-import { ProtectedRoute } from "../components/AuthProvider";
+import { ProtectedRoute, useAuth } from "../components/AuthProvider";
 
 let socket;
 
@@ -15,9 +15,9 @@ function ChatContent() {
   const [subject, setSubject] = useState("");
   const [conversationId, setConversationId] = useState(null);
 
+  const { user } = useAuth();
   const [message, setMessage] = useState("");
   const [messages, setMessages] = useState([]);
-  const [username, setUsername] = useState("Usuario");
   const [connected, setConnected] = useState(false);
 
   const messagesEndRef = useRef(null);
@@ -111,6 +111,11 @@ function ChatContent() {
       return;
     }
 
+    if (!user?.id) {
+      alert("Usuario no autenticado");
+      return;
+    }
+
     const res = await fetch("/api/messages", {
       method: "POST",
       headers: {
@@ -120,6 +125,7 @@ function ChatContent() {
         content: message,
         senderRole: "user",
         conversationId,
+        userId: user.id,
       }),
     });
 
@@ -205,12 +211,9 @@ function ChatContent() {
           transition={{ delay: 0.1 }}
           className="mb-4 flex gap-3 items-center"
         >
-          <input
-            placeholder="Tu nombre"
-            value={username}
-            onChange={(e) => setUsername(e.target.value)}
-            className="px-4 py-2 rounded-xl bg-zinc-800/50 border border-zinc-700 text-white placeholder-zinc-500 text-sm focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500/50 transition-all w-48"
-          />
+          <div className="px-4 py-2 rounded-xl bg-zinc-800/50 border border-zinc-700 text-white text-sm">
+            {user?.name ? `Usuario: ${user.name}` : "Usuario autenticado"}
+          </div>
 
           {conversationId && (
             <div className="px-4 py-2 rounded-xl bg-zinc-800/50 border border-zinc-700 text-white text-sm">
@@ -268,6 +271,8 @@ function ChatContent() {
               <AnimatePresence initial={false}>
                 {messages.map((msg) => {
                   const isSupport = msg.senderRole === "support";
+                  const isOwnMessage = msg.senderRole === "user" && msg.userId === user?.id;
+                  const messageAuthor = isSupport ? "Soporte" : msg.user?.name || "Usuario";
 
                   return (
                     <motion.div
@@ -275,19 +280,17 @@ function ChatContent() {
                       initial={{ opacity: 0, y: 10, scale: 0.95 }}
                       animate={{ opacity: 1, y: 0, scale: 1 }}
                       transition={{ duration: 0.2 }}
-                      className={`flex ${
-                        isSupport ? "justify-start" : "justify-end"
-                      }`}
+                      className={`flex ${isOwnMessage ? "justify-end" : "justify-start"}`}
                     >
                       <div
                         className={`max-w-xs px-4 py-2.5 rounded-2xl text-sm ${
-                          isSupport
+                          isSupport || !isOwnMessage
                             ? "bg-zinc-800 text-zinc-200 border border-zinc-700 rounded-bl-sm"
                             : "bg-linear-to-r from-orange-500 to-red-500 text-white rounded-br-sm"
                         }`}
                       >
                         <p className="font-bold mb-1">
-                          {isSupport ? "Soporte" : username}
+                          {messageAuthor}
                         </p>
 
                         <p>{msg.content}</p>
