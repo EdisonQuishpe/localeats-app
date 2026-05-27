@@ -67,6 +67,55 @@ export async function POST(req) {
       },
     });
 
+    // Create push notification for the other party
+    try {
+      const conversation = message.conversation;
+      let targetUserIds = [];
+
+      if (senderRole === "user") {
+        // Notify all admins/support
+        const admins = await prisma.user.findMany({
+          where: { role: { in: ["admin", "support"] } },
+          select: { id: true },
+        });
+        targetUserIds = admins.map((a) => a.id);
+      } else if (senderRole === "support" && conversation.userId) {
+        // Notify the conversation owner
+        targetUserIds = [conversation.userId];
+      }
+
+      if (targetUserIds.length > 0) {
+        const senderName = message.user?.name || "Soporte";
+        const notifications = await Promise.all(
+          targetUserIds.map((uid) =>
+            prisma.notification.create({
+              data: {
+                type: "message",
+                title: `💬 ${senderName}`,
+                body: content.length > 80 ? content.slice(0, 80) + "..." : content,
+                userId: uid,
+                link: `/support/${conversationIdNumber}`,
+              },
+            })
+          )
+        );
+
+        // Push via Socket.IO
+        if (global.io && global.userSockets) {
+          targetUserIds.forEach((uid, i) => {
+            const sockets = global.userSockets.get(String(uid));
+            if (sockets) {
+              sockets.forEach((sid) => {
+                global.io.to(sid).emit("new-notification", notifications[i]);
+              });
+            }
+          });
+        }
+      }
+    } catch (notifErr) {
+      console.error("Notification error:", notifErr);
+    }
+
     return Response.json({
       message: "Mensaje creado",
       data: message,

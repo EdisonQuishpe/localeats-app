@@ -1,5 +1,4 @@
 "use client";
-
 import { useEffect, useRef, useState } from "react";
 import { io } from "socket.io-client";
 import Link from "next/link";
@@ -11,55 +10,35 @@ let socket;
 
 function ChatContent() {
   const { t } = useTheme();
-
+  const { user } = useAuth();
   const [subject, setSubject] = useState("");
   const [conversationId, setConversationId] = useState(null);
-
-  const { user } = useAuth();
   const [message, setMessage] = useState("");
   const [messages, setMessages] = useState([]);
   const [connected, setConnected] = useState(false);
-
   const messagesEndRef = useRef(null);
 
   useEffect(() => {
     socket = io();
-
     socket.on("connect", () => {
       setConnected(true);
-
       const savedConversationId = localStorage.getItem("conversationId");
-
       if (savedConversationId) {
         setConversationId(savedConversationId);
         socket.emit("join-conversation", savedConversationId);
-
         fetch(`/api/messages?conversationId=${savedConversationId}`)
           .then((res) => res.json())
-          .then((data) => {
-            if (Array.isArray(data)) {
-              setMessages(data);
-            }
-          });
+          .then((data) => { if (Array.isArray(data)) setMessages(data); });
       }
     });
-
-    socket.on("disconnect", () => {
-      setConnected(false);
-    });
-
+    socket.on("disconnect", () => setConnected(false));
     socket.on("support-message", (msg) => {
       setMessages((prev) => {
-        const exists = prev.some((m) => m.id === msg.id);
-        if (exists) return prev;
-
+        if (prev.some((m) => m.id === msg.id)) return prev;
         return [...prev, msg];
       });
     });
-
-    return () => {
-      socket.disconnect();
-    };
+    return () => { socket.disconnect(); };
   }, []);
 
   useEffect(() => {
@@ -68,59 +47,27 @@ function ChatContent() {
 
   const createConversation = async (e) => {
     e.preventDefault();
-
-    if (!subject.trim()) {
-      alert("Escribe el asunto de soporte");
-      return;
-    }
-
+    if (!subject.trim()) return;
     const res = await fetch("/api/conversations", {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ subject }),
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ subject, userId: user?.id }),
     });
-
     const data = await res.json();
-
     if (data.conversation) {
-      const newConversationId = data.conversation.id.toString();
-
-      setConversationId(newConversationId);
-      localStorage.setItem("conversationId", newConversationId);
-
-      socket.emit("join-conversation", newConversationId);
-
-      alert(`Conversación #${newConversationId} creada`);
-    } else {
-      alert(data.error);
+      const newId = data.conversation.id.toString();
+      setConversationId(newId);
+      localStorage.setItem("conversationId", newId);
+      socket.emit("join-conversation", newId);
     }
   };
 
   const sendMessage = async (e) => {
     e.preventDefault();
-
-    if (!message.trim()) {
-      alert("Escribe un mensaje");
-      return;
-    }
-
-    if (!conversationId) {
-      alert("Primero crea una conversación");
-      return;
-    }
-
-    if (!user?.id) {
-      alert("Usuario no autenticado");
-      return;
-    }
-
+    if (!message.trim() || !conversationId || !user?.id) return;
     const res = await fetch("/api/messages", {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         content: message,
         senderRole: "user",
@@ -128,28 +75,14 @@ function ChatContent() {
         userId: user.id,
       }),
     });
-
     const data = await res.json();
-
     if (data.data) {
-      socket.emit("support-message", {
-        conversationId,
-        message: data.data,
-      });
-
+      socket.emit("support-message", { conversationId, message: data.data });
       setMessage("");
-    } else {
-      alert(data.error);
     }
   };
 
   const resetConversation = () => {
-    const confirmReset = confirm(
-      "¿Quieres iniciar una nueva conversación de soporte?"
-    );
-
-    if (!confirmReset) return;
-
     localStorage.removeItem("conversationId");
     setConversationId(null);
     setMessages([]);
@@ -158,79 +91,71 @@ function ChatContent() {
   };
 
   return (
-    <div className="relative min-h-screen overflow-hidden">
-      <div className="absolute inset-0">
+    <div className="relative min-h-screen overflow-hidden flex flex-col">
+      {/* Background */}
+      <div className="absolute inset-0 pointer-events-none">
         <motion.div
-          className="absolute top-[20%] left-[5%] w-80 h-80 rounded-full bg-green-500/5 blur-[100px]"
+          className="absolute top-[20%] left-[5%] w-80 h-80 rounded-full blur-[120px]"
+          style={{ background: "var(--brand-glow)" }}
           animate={{ x: [0, 20, 0], y: [0, -15, 0] }}
           transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
         />
-
-        <motion.div
-          className="absolute bottom-[20%] right-[10%] w-64 h-64 rounded-full bg-blue-500/5 blur-[80px]"
-          animate={{ x: [0, -15, 0], y: [0, 10, 0] }}
-          transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
-        />
       </div>
 
-      <div className="relative z-10 max-w-3xl mx-auto px-6 py-12">
+      <div className="relative z-10 flex-1 flex flex-col max-w-3xl mx-auto w-full px-4 sm:px-6 py-8">
+        {/* Header */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           className="flex justify-between items-center mb-6"
         >
           <div>
-            <h1 className="text-3xl font-black text-white">
-              Soporte LocalEats
+            <h1 className="text-3xl font-black" style={{ color: "var(--text-primary)" }}>
+              💬 {t("chatTitle")}
             </h1>
-
             <div className="flex items-center gap-2 mt-2">
               <span
-                className={`w-2 h-2 rounded-full ${
-                  connected ? "bg-green-400 animate-pulse" : "bg-red-400"
-                }`}
+                className={`w-2 h-2 rounded-full ${connected ? "animate-pulse" : ""}`}
+                style={{ background: connected ? "var(--success)" : "var(--error)" }}
               />
-
-              <span className="text-sm text-zinc-500">
-                {connected ? "Conectado" : "Desconectado"}
+              <span className="text-sm" style={{ color: "var(--text-muted)" }}>
+                {connected ? t("connected") : t("disconnected")}
               </span>
             </div>
           </div>
-
-          <Link
-            href="/dashboard"
-            className="text-sm text-orange-400 hover:text-orange-300 transition-colors"
-          >
-            ← Volver
+          <Link href="/dashboard" className="text-sm font-medium" style={{ color: "var(--brand)" }}>
+            ← {t("back")}
           </Link>
         </motion.div>
 
-        <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.1 }}
-          className="mb-4 flex gap-3 items-center"
-        >
-          <div className="px-4 py-2 rounded-xl bg-zinc-800/50 border border-zinc-700 text-white text-sm">
-            {user?.name ? `Usuario: ${user.name}` : "Usuario autenticado"}
-          </div>
-
+        {/* Info bar */}
+        <div className="mb-4 flex flex-wrap gap-2 items-center">
+          <span
+            className="px-3 py-1.5 rounded-lg text-sm"
+            style={{ background: "var(--surface-secondary)", color: "var(--text-secondary)", border: "1px solid var(--border)" }}
+          >
+            {user?.name || t("yourName")}
+          </span>
           {conversationId && (
-            <div className="px-4 py-2 rounded-xl bg-zinc-800/50 border border-zinc-700 text-white text-sm">
-              Conversación #{conversationId}
-            </div>
+            <>
+              <span
+                className="px-3 py-1.5 rounded-lg text-sm"
+                style={{ background: "var(--surface-secondary)", color: "var(--text-secondary)", border: "1px solid var(--border)" }}
+              >
+                #{conversationId}
+              </span>
+              <button
+                onClick={resetConversation}
+                className="px-3 py-1.5 rounded-lg text-sm font-medium transition-colors"
+                style={{ background: "rgba(239,68,68,0.1)", color: "var(--error)", border: "1px solid rgba(239,68,68,0.2)" }}
+              >
+                {t("newConversation")}
+              </button>
+            </>
           )}
+        </div>
 
-          {conversationId && (
-            <button
-              onClick={resetConversation}
-              className="px-4 py-2 rounded-xl bg-red-500/80 text-white text-sm hover:bg-red-600 transition"
-            >
-              Nueva conversación
-            </button>
-          )}
-        </motion.div>
-
+        {/* Create conversation */}
         {!conversationId && (
           <motion.form
             onSubmit={createConversation}
@@ -241,63 +166,54 @@ function ChatContent() {
             <input
               value={subject}
               onChange={(e) => setSubject(e.target.value)}
-              placeholder="Asunto de soporte"
-              className="flex-1 px-4 py-3 rounded-xl bg-zinc-800/50 border border-zinc-700 text-white placeholder-zinc-500 focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500/50 transition-all"
+              placeholder={t("subject")}
+              className="input-field flex-1"
             />
-
-            <button
+            <motion.button
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
               type="submit"
-              className="px-6 py-3 bg-blue-500 text-white rounded-xl font-bold"
+              className="btn-primary"
             >
-              Iniciar
-            </button>
+              {t("create")}
+            </motion.button>
           </motion.form>
         )}
 
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2 }}
-          className="rounded-2xl border border-zinc-800 bg-zinc-900/50 backdrop-blur-md overflow-hidden"
-        >
-          <div className="h-96 overflow-y-auto p-6 space-y-3">
+        {/* Messages area */}
+        <div className="glass-card flex-1 flex flex-col overflow-hidden">
+          <div className="flex-1 overflow-y-auto p-5 space-y-3" style={{ minHeight: "360px" }}>
             {messages.length === 0 ? (
               <div className="flex items-center justify-center h-full">
-                <p className="text-zinc-600 text-sm">
-                  No hay mensajes todavía
-                </p>
+                <p style={{ color: "var(--text-muted)" }}>{t("noMessages")}</p>
               </div>
             ) : (
               <AnimatePresence initial={false}>
                 {messages.map((msg) => {
                   const isSupport = msg.senderRole === "support";
-                  const isOwnMessage = msg.senderRole === "user" && msg.userId === user?.id;
-                  const messageAuthor = isSupport ? "Soporte" : msg.user?.name || "Usuario";
-
+                  const isOwn = msg.senderRole === "user" && msg.userId === user?.id;
                   return (
                     <motion.div
                       key={msg.id}
-                      initial={{ opacity: 0, y: 10, scale: 0.95 }}
-                      animate={{ opacity: 1, y: 0, scale: 1 }}
-                      transition={{ duration: 0.2 }}
-                      className={`flex ${isOwnMessage ? "justify-end" : "justify-start"}`}
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className={`flex ${isOwn ? "justify-end" : "justify-start"}`}
                     >
                       <div
-                        className={`max-w-xs px-4 py-2.5 rounded-2xl text-sm ${
-                          isSupport || !isOwnMessage
-                            ? "bg-zinc-800 text-zinc-200 border border-zinc-700 rounded-bl-sm"
-                            : "bg-linear-to-r from-orange-500 to-red-500 text-white rounded-br-sm"
-                        }`}
+                        className="max-w-[75%] px-4 py-3 rounded-2xl text-sm"
+                        style={
+                          isOwn
+                            ? { background: "var(--brand)", color: "white", borderBottomRightRadius: "4px" }
+                            : { background: "var(--surface-secondary)", color: "var(--text-primary)", border: "1px solid var(--border)", borderBottomLeftRadius: "4px" }
+                        }
                       >
-                        <p className="font-bold mb-1">
-                          {messageAuthor}
+                        <p className="font-semibold text-[11px] mb-1 opacity-80">
+                          {isSupport ? t("supportTitle") : (msg.user?.name || user?.name)}
                         </p>
-
                         <p>{msg.content}</p>
-
                         {msg.createdAt && (
-                          <p className="text-[10px] opacity-70 mt-1">
-                            {new Date(msg.createdAt).toLocaleString()}
+                          <p className="text-[10px] mt-1 opacity-60">
+                            {new Date(msg.createdAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
                           </p>
                         )}
                       </div>
@@ -306,31 +222,31 @@ function ChatContent() {
                 })}
               </AnimatePresence>
             )}
-
             <div ref={messagesEndRef} />
           </div>
 
+          {/* Input */}
           <form
             onSubmit={sendMessage}
-            className="flex gap-3 p-4 border-t border-zinc-800"
+            className="flex gap-3 p-4"
+            style={{ borderTop: "1px solid var(--border)" }}
           >
             <input
               value={message}
               onChange={(e) => setMessage(e.target.value)}
-              placeholder="Escribe tu mensaje..."
-              className="flex-1 px-4 py-3 rounded-xl bg-zinc-800/50 border border-zinc-700 text-white placeholder-zinc-500 focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500/50 transition-all"
+              placeholder={t("typeMessage")}
+              className="input-field flex-1"
             />
-
             <motion.button
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
               type="submit"
-              className="px-6 py-3 bg-linear-to-r from-orange-500 to-red-500 text-white rounded-xl font-bold shadow-lg shadow-orange-500/20 transition-all"
+              className="btn-primary"
             >
-              Enviar
+              {t("send")}
             </motion.button>
           </form>
-        </motion.div>
+        </div>
       </div>
     </div>
   );

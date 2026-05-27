@@ -33,6 +33,7 @@ export async function POST(req) {
         id: user.id,
         name: user.name,
         email: user.email,
+        role: user.role,
       },
     });
 

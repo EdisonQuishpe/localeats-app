@@ -3,11 +3,20 @@ import { PrismaClient } from "@prisma/client";
 const prisma = new PrismaClient();
 
 // Listar conversaciones
-export async function GET() {
+export async function GET(req) {
   try {
+    const { searchParams } = new URL(req.url);
+    const userId = searchParams.get("userId");
+
+    const where = userId ? { userId: Number(userId) } : {};
+
     const conversations = await prisma.conversation.findMany({
+      where,
       include: {
         messages: true,
+        user: {
+          select: { id: true, name: true, email: true },
+        },
       },
       orderBy: {
         createdAt: "desc",
@@ -28,7 +37,7 @@ export async function GET() {
 export async function POST(req) {
   try {
     const body = await req.json();
-    const { subject } = body;
+    const { subject, userId } = body;
 
     const trimmed = String(subject || "").trim();
     if (!trimmed) {
@@ -39,9 +48,17 @@ export async function POST(req) {
       return Response.json({ error: "El asunto es demasiado largo" }, { status: 400 });
     }
 
+    const data = { subject: trimmed };
+    if (userId) {
+      data.userId = Number(userId);
+    }
+
     const conversation = await prisma.conversation.create({
-      data: {
-        subject: trimmed,
+      data,
+      include: {
+        user: {
+          select: { id: true, name: true },
+        },
       },
     });
 

@@ -40,16 +40,13 @@ export default function Register() {
 
   return (
     <div className="relative flex items-center justify-center min-h-screen overflow-hidden">
-      <div className="absolute inset-0">
+      {/* Background */}
+      <div className="absolute inset-0 pointer-events-none">
         <motion.div
-          className="absolute top-[10%] right-[15%] w-96 h-96 rounded-full bg-blue-500/8 blur-[100px]"
+          className="absolute top-[10%] right-[15%] w-96 h-96 rounded-full blur-[120px]"
+          style={{ background: "var(--brand-glow)" }}
           animate={{ x: [0, -30, 0], y: [0, 20, 0] }}
           transition={{ duration: 9, repeat: Infinity, ease: "easeInOut" }}
-        />
-        <motion.div
-          className="absolute bottom-[10%] left-[20%] w-80 h-80 rounded-full bg-purple-500/8 blur-[100px]"
-          animate={{ x: [0, 20, 0], y: [0, -20, 0] }}
-          transition={{ duration: 7, repeat: Infinity, ease: "easeInOut" }}
         />
       </div>
 
@@ -58,7 +55,12 @@ export default function Register() {
         animate={{ opacity: 1, y: 0, scale: 1 }}
         transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
         onSubmit={handleSubmit}
-        className="relative z-10 w-full max-w-sm p-8 rounded-2xl border border-zinc-800 bg-zinc-900/70 backdrop-blur-xl shadow-2xl"
+        className="relative z-10 w-full max-w-sm p-8 rounded-2xl shadow-2xl"
+        style={{
+          background: "var(--glass-bg)",
+          backdropFilter: "blur(20px)",
+          border: "1px solid var(--glass-border)",
+        }}
       >
         <motion.div
           initial={{ opacity: 0, y: 10 }}
@@ -67,14 +69,17 @@ export default function Register() {
           className="text-center mb-8"
         >
           <span className="text-4xl">✨</span>
-          <h1 className="mt-3 text-2xl font-bold text-white">{t("register")}</h1>
+          <h1 className="mt-3 text-2xl font-bold" style={{ color: "var(--text-primary)" }}>
+            {t("register")}
+          </h1>
         </motion.div>
 
         {error && (
           <motion.p
             initial={{ opacity: 0, x: -10 }}
             animate={{ opacity: 1, x: 0 }}
-            className="text-red-400 text-sm mb-4 p-3 rounded-lg bg-red-500/10 border border-red-500/20"
+            className="text-sm mb-4 p-3 rounded-lg"
+            style={{ color: "var(--error)", background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.2)" }}
           >
             {error}
           </motion.p>
@@ -86,7 +91,7 @@ export default function Register() {
             placeholder={t("name")}
             value={form.name}
             onChange={handleChange}
-            className="w-full p-3 rounded-xl bg-zinc-800/50 border border-zinc-700 text-white placeholder-zinc-500 focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500/50 transition-all"
+            className="input-field"
           />
           <input
             name="email"
@@ -94,7 +99,7 @@ export default function Register() {
             placeholder={t("email")}
             value={form.email}
             onChange={handleChange}
-            className="w-full p-3 rounded-xl bg-zinc-800/50 border border-zinc-700 text-white placeholder-zinc-500 focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500/50 transition-all"
+            className="input-field"
           />
           <input
             name="password"
@@ -102,23 +107,23 @@ export default function Register() {
             placeholder={t("password")}
             value={form.password}
             onChange={handleChange}
-            className="w-full p-3 rounded-xl bg-zinc-800/50 border border-zinc-700 text-white placeholder-zinc-500 focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500/50 transition-all"
+            className="input-field"
           />
         </div>
 
         <motion.button
-          whileHover={{ scale: 1.02, boxShadow: "0 0 20px rgba(249,115,22,0.3)" }}
+          whileHover={{ scale: 1.02 }}
           whileTap={{ scale: 0.98 }}
           type="submit"
           disabled={loading}
-          className="w-full mt-6 py-3 bg-linear-to-r from-orange-500 to-red-500 text-white rounded-xl font-bold shadow-lg shadow-orange-500/20 disabled:opacity-50 transition-all"
+          className="w-full mt-6 py-3 btn-primary disabled:opacity-50"
         >
           {loading ? t("registering") : t("registerBtn")}
         </motion.button>
 
-        <p className="mt-6 text-center text-sm text-zinc-500">
+        <p className="mt-6 text-center text-sm" style={{ color: "var(--text-muted)" }}>
           {t("hasAccount")}{" "}
-          <Link href="/login" className="text-orange-400 hover:text-orange-300 transition-colors">
+          <Link href="/login" className="font-medium transition-colors" style={{ color: "var(--brand)" }}>
             {t("login")}
           </Link>
         </p>

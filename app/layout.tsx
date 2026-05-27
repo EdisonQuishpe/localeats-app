@@ -31,11 +31,14 @@ export default function RootLayout({
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased dark`}
       suppressHydrationWarning
     >
-      <body className="min-h-full flex flex-col bg-[#f8f9fa] dark:bg-[#0a0a0a] text-zinc-900 dark:text-white transition-colors">
+      <body
+        className="min-h-full flex flex-col transition-colors duration-300"
+        style={{ background: "var(--background)", color: "var(--foreground)" }}
+      >
         <AuthProvider>
           <ThemeProvider>
             <Navbar />
-            <main className="flex-1 pt-16">{children}</main>
+            <main className="flex-1 pt-14">{children}</main>
           </ThemeProvider>
         </AuthProvider>
       </body>
