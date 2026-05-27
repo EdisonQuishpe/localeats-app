@@ -17,9 +17,9 @@ export async function GET() {
 export async function POST(req) {
   try {
     const body = await req.json();
-    const { name, description, price } = body;
+    const { name, description, price, userId } = body;
 
-    if (!name || !description || price === undefined || price === null) {
+    if (!name || !description || price === undefined || price === null || !userId) {
       return Response.json({ error: "Campos requeridos" }, { status: 400 });
     }
 
@@ -28,11 +28,17 @@ export async function POST(req) {
       return Response.json({ error: "Precio inválido" }, { status: 400 });
     }
 
+    const ownerId = Number(userId);
+    if (Number.isNaN(ownerId) || ownerId <= 0) {
+      return Response.json({ error: "Usuario inválido" }, { status: 400 });
+    }
+
     const product = await prisma.product.create({
       data: {
         name,
         description,
         price: numericPrice,
+        userId: ownerId,
       },
     });
 
