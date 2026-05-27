@@ -120,6 +120,10 @@ export async function DELETE(req, context) {
       return Response.json({ error: "No tienes permiso para eliminar este producto" }, { status: 403 });
     }
 
+    await prisma.orderItem.deleteMany({
+      where: { productId },
+    });
+
     await prisma.product.delete({
       where: { id: productId },
     });
