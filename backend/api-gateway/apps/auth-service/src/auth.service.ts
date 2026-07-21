@@ -9,6 +9,12 @@ import { PrismaService } from './prisma.service';
 import { RegisterUserDto } from './dto/register-user.dto';
 import { LoginUserDto } from './dto/login-user.dto';
 
+interface JwtPayload {
+  sub: number;
+  email: string;
+  role: string;
+}
+
 @Injectable()
 export class AuthService {
   constructor(
@@ -89,20 +95,20 @@ export class AuthService {
     };
   }
 
+  async validateToken(token: string): Promise<JwtPayload> {
+    let payload: JwtPayload;
 
-  async validateToken(token: string) {
-  try {
-    const payload = await this.jwtService.verifyAsync(token);
+    try {
+      payload = await this.jwtService.verifyAsync<JwtPayload>(token);
+    } catch {
+      throw new UnauthorizedException('Token inválido o expirado');
+    }
 
     const user = await this.prisma.user.findUnique({
       where: {
         id: payload.sub,
       },
       select: {
-        id: true,
-        name: true,
-        email: true,
-        role: true,
         isActive: true,
       },
     });
@@ -111,12 +117,6 @@ export class AuthService {
       throw new UnauthorizedException('Usuario no autorizado');
     }
 
-    return {
-      valid: true,
-      user,
-    };
-  } catch {
-    throw new UnauthorizedException('Token inválido o expirado');
+    return payload;
   }
-}
 }

@@ -121,7 +121,7 @@ const config = {
       "value": "prisma-client-js"
     },
     "output": {
-      "value": "C:\\Users\\HP\\Music\\proyectoAplicacionesWeb\\localeats-app\\backend\\api-gateway\\apps\\auth-service\\generated\\prisma",
+      "value": "C:\\Users\\Sebas\\Proyecto\\localeats-app\\backend\\api-gateway\\apps\\auth-service\\generated\\prisma",
       "fromEnvVar": null
     },
     "config": {
@@ -135,7 +135,7 @@ const config = {
       }
     ],
     "previewFeatures": [],
-    "sourceFilePath": "C:\\Users\\HP\\Music\\proyectoAplicacionesWeb\\localeats-app\\backend\\api-gateway\\apps\\auth-service\\prisma\\schema.prisma",
+    "sourceFilePath": "C:\\Users\\Sebas\\Proyecto\\localeats-app\\backend\\api-gateway\\apps\\auth-service\\prisma\\schema.prisma",
     "isCustomOutput": true
   },
   "relativeEnvPaths": {
@@ -149,7 +149,6 @@ const config = {
     "db"
   ],
   "activeProvider": "mysql",
-  "postinstall": false,
   "inlineDatasources": {
     "db": {
       "url": {

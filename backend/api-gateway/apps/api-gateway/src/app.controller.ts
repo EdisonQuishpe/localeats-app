@@ -3,14 +3,17 @@ import {
   Controller,
   Delete,
   Get,
-  Headers,
   Inject,
   Param,
   Patch,
   Post,
-  UnauthorizedException,
+  Req,
+  UseGuards,
 } from '@nestjs/common';
 import { ClientProxy } from '@nestjs/microservices';
+import { Request } from 'express';
+import { JwtAuthGuard } from './auth/jwt-auth.guard';
+import { JwtPayload } from './auth/jwt-payload.type';
 
 @Controller()
 export class AppController {
@@ -87,26 +90,13 @@ export class AppController {
   }
 
   @Get('auth/profile')
-  getProfile(
-    @Headers('authorization') authorization?: string,
-  ) {
-    if (!authorization?.startsWith('Bearer ')) {
-      throw new UnauthorizedException(
-        'Debe enviar un token Bearer',
-      );
-    }
-
-    const token = authorization
-      .replace('Bearer ', '')
-      .trim();
-
-    return this.authClient.send(
-      { cmd: 'auth_validate_token' },
-      token,
-    );
+  @UseGuards(JwtAuthGuard)
+  getProfile(@Req() request: Request & { user?: JwtPayload }) {
+    return request.user;
   }
 
   @Get('products')
+  @UseGuards(JwtAuthGuard)
   findAllProducts() {
     return this.productClient.send(
       { cmd: 'products_find_all' },
@@ -115,6 +105,7 @@ export class AppController {
   }
 
   @Get('products/:id')
+  @UseGuards(JwtAuthGuard)
   findOneProduct(@Param('id') id: string) {
     return this.productClient.send(
       { cmd: 'products_find_one' },
@@ -123,6 +114,7 @@ export class AppController {
   }
 
   @Post('products')
+  @UseGuards(JwtAuthGuard)
   createProduct(
     @Body()
     body: {
@@ -140,6 +132,7 @@ export class AppController {
   }
 
   @Patch('products/:id')
+  @UseGuards(JwtAuthGuard)
   updateProduct(
     @Param('id') id: string,
     @Body()
@@ -161,6 +154,7 @@ export class AppController {
   }
 
   @Delete('products/:id')
+  @UseGuards(JwtAuthGuard)
   deleteProduct(@Param('id') id: string) {
     return this.productClient.send(
       { cmd: 'products_delete' },
@@ -170,6 +164,7 @@ export class AppController {
 
 
   @Get('support/conversations')
+@UseGuards(JwtAuthGuard)
 findAllConversations() {
   return this.supportClient.send(
     { cmd: 'conversations_find_all' },
@@ -178,6 +173,7 @@ findAllConversations() {
 }
 
 @Get('support/conversations/:id')
+@UseGuards(JwtAuthGuard)
 findConversation(@Param('id') id: string) {
   return this.supportClient.send(
     { cmd: 'conversations_find_one' },
@@ -186,6 +182,7 @@ findConversation(@Param('id') id: string) {
 }
 
 @Post('support/conversations')
+@UseGuards(JwtAuthGuard)
 createConversation(
   @Body()
   body: {
@@ -200,6 +197,7 @@ createConversation(
 }
 
 @Post('support/messages')
+@UseGuards(JwtAuthGuard)
 createSupportMessage(
   @Body()
   body: {
@@ -216,6 +214,7 @@ createSupportMessage(
 }
 
 @Patch('support/conversations/:id/close')
+@UseGuards(JwtAuthGuard)
 closeConversation(@Param('id') id: string) {
   return this.supportClient.send(
     { cmd: 'conversations_close' },
