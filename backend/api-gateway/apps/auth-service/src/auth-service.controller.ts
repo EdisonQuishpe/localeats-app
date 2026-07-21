@@ -46,4 +46,10 @@ export class AuthServiceController {
 login(@Payload() data: LoginUserDto) {
   return this.authService.login(data);
 }
+
+
+@MessagePattern({ cmd: 'auth_validate_token' })
+validateToken(@Payload() token: string) {
+  return this.authService.validateToken(token);
+}
 }

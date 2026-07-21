@@ -2,8 +2,10 @@ import {
   Body,
   Controller,
   Get,
+  Headers,
   Inject,
   Post,
+  UnauthorizedException,
 } from '@nestjs/common';
 import { ClientProxy } from '@nestjs/microservices';
 
@@ -73,6 +75,24 @@ login(@Body() body: {
   return this.authClient.send(
     { cmd: 'auth_login' },
     body,
+  );
+}
+
+@Get('auth/profile')
+async getProfile(
+  @Headers('authorization') authorization?: string,
+) {
+  if (!authorization?.startsWith('Bearer ')) {
+    throw new UnauthorizedException(
+      'Debe enviar un token Bearer',
+    );
+  }
+
+  const token = authorization.replace('Bearer ', '').trim();
+
+  return this.authClient.send(
+    { cmd: 'auth_validate_token' },
+    token,
   );
 }
 
