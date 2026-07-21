@@ -36,4 +36,12 @@ export class AppController {
   checkSupportService() {
     return this.supportClient.send({ cmd: 'support_ping' }, {});
   }
+
+  @Get('auth/database-health')
+checkAuthDatabase() {
+  return this.authClient.send(
+    { cmd: 'auth_db_health' },
+    {},
+  );
+}
 }
