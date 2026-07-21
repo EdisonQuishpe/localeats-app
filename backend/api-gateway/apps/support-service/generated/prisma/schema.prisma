@@ -1,0 +1,42 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("SUPPORT_DATABASE_URL")
+}
+
+model Conversation {
+  id        Int      @id @default(autoincrement())
+  subject   String
+  status    String   @default("open")
+  userId    Int?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  messages Message[]
+}
+
+model Message {
+  id         Int      @id @default(autoincrement())
+  content    String
+  senderRole String
+  userId     Int?
+  createdAt  DateTime @default(now())
+
+  conversationId Int
+  conversation   Conversation @relation(fields: [conversationId], references: [id])
+}
+
+model Notification {
+  id        Int      @id @default(autoincrement())
+  type      String
+  title     String
+  body      String
+  read      Boolean  @default(false)
+  link      String?
+  userId    Int
+  createdAt DateTime @default(now())
+}

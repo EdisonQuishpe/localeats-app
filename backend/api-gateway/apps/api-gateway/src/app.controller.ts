@@ -96,4 +96,12 @@ async getProfile(
   );
 }
 
+@Get('support/database-health')
+checkSupportDatabase() {
+  return this.supportClient.send(
+    { cmd: 'support_db_health' },
+    {},
+  );
+}
+
 }
