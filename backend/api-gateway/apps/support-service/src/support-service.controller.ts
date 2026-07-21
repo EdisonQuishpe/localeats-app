@@ -1,12 +1,16 @@
 import { Controller } from '@nestjs/common';
-import { MessagePattern } from '@nestjs/microservices';
-
+import {
+  MessagePattern,
+  Payload,
+} from '@nestjs/microservices';
 import { PrismaService } from './prisma.service';
+import { SupportService } from './support.service';
 
 @Controller()
 export class SupportServiceController {
   constructor(
     private readonly prisma: PrismaService,
+    private readonly supportService: SupportService,
   ) {}
 
   @MessagePattern({ cmd: 'support_ping' })
@@ -14,24 +18,62 @@ export class SupportServiceController {
     return {
       service: 'support-service',
       status: 'ok',
-      message: 'Support Service está funcionando',
     };
   }
 
   @MessagePattern({ cmd: 'support_db_health' })
   async checkDatabase() {
-    const conversations =
+    const conversationCount =
       await this.prisma.conversation.count();
 
-    const messages =
+    const messageCount =
       await this.prisma.message.count();
 
     return {
       service: 'support-service',
       database: 'localeats_support',
       status: 'connected',
-      conversationCount: conversations,
-      messageCount: messages,
+      conversationCount,
+      messageCount,
     };
+  }
+
+  @MessagePattern({ cmd: 'conversations_find_all' })
+  findAllConversations() {
+    return this.supportService.findAllConversations();
+  }
+
+  @MessagePattern({ cmd: 'conversations_find_one' })
+  findConversation(@Payload() id: number) {
+    return this.supportService.findConversation(Number(id));
+  }
+
+  @MessagePattern({ cmd: 'conversations_create' })
+  createConversation(
+    @Payload()
+    data: {
+      subject: string;
+      userId?: number;
+    },
+  ) {
+    return this.supportService.createConversation(data);
+  }
+
+  @MessagePattern({ cmd: 'messages_create' })
+  createMessage(
+    @Payload()
+    data: {
+      content: string;
+      senderRole: string;
+      conversationId: number;
+      userId?: number;
+    },
+  ) {
+    return this.supportService.createMessage(data);
+  }
+
+  @MessagePattern({ cmd: 'conversations_close' })
+  closeConversation(@Payload() id: number) {
+    return this.supportService.closeConversation(Number(id));
   }
 }
