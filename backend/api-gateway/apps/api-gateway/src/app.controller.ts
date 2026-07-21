@@ -9,6 +9,9 @@ export class AppController {
 
     @Inject('PRODUCT_SERVICE')
     private readonly productClient: ClientProxy,
+
+    @Inject('SUPPORT_SERVICE')
+    private readonly supportClient: ClientProxy,
   ) {}
 
   @Get()
@@ -21,17 +24,16 @@ export class AppController {
 
   @Get('auth/health')
   checkAuthService() {
-    return this.authClient.send(
-      { cmd: 'auth_ping' },
-      {},
-    );
+    return this.authClient.send({ cmd: 'auth_ping' }, {});
   }
 
   @Get('products/health')
   checkProductService() {
-    return this.productClient.send(
-      { cmd: 'product_ping' },
-      {},
-    );
+    return this.productClient.send({ cmd: 'product_ping' }, {});
+  }
+
+  @Get('support/health')
+  checkSupportService() {
+    return this.supportClient.send({ cmd: 'support_ping' }, {});
   }
 }

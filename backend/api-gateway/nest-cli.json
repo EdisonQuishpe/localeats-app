@@ -36,6 +36,15 @@
       "compilerOptions": {
         "tsConfigPath": "apps/product-service/tsconfig.app.json"
       }
+    },
+    "support-service": {
+      "type": "application",
+      "root": "apps/support-service",
+      "entryFile": "main",
+      "sourceRoot": "apps/support-service/src",
+      "compilerOptions": {
+        "tsConfigPath": "apps/support-service/tsconfig.app.json"
+      }
     }
   }
 }
