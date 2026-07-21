@@ -1,0 +1,72 @@
+# =============================================================
+#  LocalEats - Orquestación con Docker Compose
+#  Servicios:  mysql  ->  backend (gateway + 3 microservicios)  ->  frontend
+# =============================================================
+
+services:
+  # ---------- Base de datos (una instancia, 4 bases) ----------
+  mysql:
+    image: mysql:8.0
+    container_name: localeats-mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+    ports:
+      # host 3307 -> contenedor 3306 (evita chocar con un MySQL local en 3306)
+      - "3307:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./mysql/init:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-p${MYSQL_ROOT_PASSWORD}"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+    networks:
+      - localeats-net
+
+  # ---------- Backend NestJS (monorepo en un contenedor) ----------
+  backend:
+    build:
+      context: ./backend/api-gateway
+    container_name: localeats-backend
+    restart: unless-stopped
+    depends_on:
+      mysql:
+        condition: service_healthy
+    environment:
+      NODE_ENV: production
+      JWT_SECRET: ${JWT_SECRET}
+      AUTH_DATABASE_URL: ${AUTH_DATABASE_URL}
+      PRODUCT_DATABASE_URL: ${PRODUCT_DATABASE_URL}
+      SUPPORT_DATABASE_URL: ${SUPPORT_DATABASE_URL}
+    ports:
+      - "3001:3001"   # única puerta HTTP del backend (API Gateway)
+    networks:
+      - localeats-net
+
+  # ---------- Frontend Next.js + Socket.IO ----------
+  frontend:
+    build:
+      context: .
+    container_name: localeats-frontend
+    restart: unless-stopped
+    depends_on:
+      mysql:
+        condition: service_healthy
+    environment:
+      NODE_ENV: production
+      DATABASE_URL: ${DATABASE_URL}
+    ports:
+      - "3000:3000"
+    networks:
+      - localeats-net
+
+volumes:
+  mysql_data:
+
+networks:
+  localeats-net:
+    driver: bridge

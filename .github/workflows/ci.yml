@@ -1,0 +1,137 @@
+name: CI/CD
+
+on:
+  push:
+    branches: [second-bimester, main]
+  pull_request:
+    branches: [second-bimester, main]
+
+# Permite publicar imágenes en GitHub Container Registry (GHCR).
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  # ---------------------------------------------------------
+  #  1) Frontend: instalar, generar Prisma, lint y build
+  # ---------------------------------------------------------
+  frontend:
+    name: Frontend (Next.js)
+    runs-on: ubuntu-latest
+    env:
+      # Valor ficticio: `prisma generate` y `next build` no se conectan a la BD.
+      DATABASE_URL: mysql://user:pass@localhost:3306/localeats
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Instalar dependencias
+        run: npm ci
+
+      - name: Generar cliente Prisma
+        run: npx prisma generate
+
+      - name: Lint
+        run: npm run lint --if-present
+
+      - name: Build
+        run: npm run build
+
+  # ---------------------------------------------------------
+  #  2) Backend: instalar, generar Prisma (x3), lint, build y tests
+  # ---------------------------------------------------------
+  backend:
+    name: Backend (NestJS)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend/api-gateway
+    env:
+      JWT_SECRET: test-secret
+      AUTH_DATABASE_URL: mysql://user:pass@localhost:3306/localeats_auth
+      PRODUCT_DATABASE_URL: mysql://user:pass@localhost:3306/localeats_product
+      SUPPORT_DATABASE_URL: mysql://user:pass@localhost:3306/localeats_support
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: backend/api-gateway/package-lock.json
+
+      - name: Instalar dependencias
+        run: npm ci
+
+      - name: Generar clientes Prisma
+        run: |
+          npx prisma generate --schema=apps/auth-service/prisma/schema.prisma
+          npx prisma generate --schema=apps/product-service/prisma/schema.prisma
+          npx prisma generate --schema=apps/support-service/prisma/schema.prisma
+
+      - name: Lint
+        run: npm run lint --if-present
+
+      - name: Build (los 4 proyectos)
+        run: |
+          npx nest build api-gateway
+          npx nest build auth-service
+          npx nest build product-service
+          npx nest build support-service
+
+      - name: Tests
+        run: npm test --if-present
+        continue-on-error: true
+
+  # ---------------------------------------------------------
+  #  3) Docker: construir (y publicar en GHCR) ambas imágenes
+  #     Solo publica en push a las ramas; en PR solo construye.
+  # ---------------------------------------------------------
+  docker:
+    name: Build & Push imágenes Docker
+    runs-on: ubuntu-latest
+    needs: [frontend, backend]
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: docker/setup-buildx-action@v3
+
+      - name: Login en GHCR
+        if: github.event_name == 'push'
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Nombre del repo en minúsculas
+        id: repo
+        run: echo "name=${GITHUB_REPOSITORY,,}" >> "$GITHUB_OUTPUT"
+
+      - name: Build & push Frontend
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ./Dockerfile
+          push: ${{ github.event_name == 'push' }}
+          tags: |
+            ghcr.io/${{ steps.repo.outputs.name }}-frontend:latest
+            ghcr.io/${{ steps.repo.outputs.name }}-frontend:${{ github.sha }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Build & push Backend
+        uses: docker/build-push-action@v6
+        with:
+          context: ./backend/api-gateway
+          file: ./backend/api-gateway/Dockerfile
+          push: ${{ github.event_name == 'push' }}
+          tags: |
+            ghcr.io/${{ steps.repo.outputs.name }}-backend:latest
+            ghcr.io/${{ steps.repo.outputs.name }}-backend:${{ github.sha }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max

@@ -1,0 +1,14 @@
+node_modules
+dist
+.git
+.gitignore
+npm-debug.log*
+Dockerfile
+.dockerignore
+.env
+.env.*
+!.env.example
+# El engine de Prisma se regenera dentro de la imagen para Linux:
+apps/**/generated
+test
+**/*.spec.ts
