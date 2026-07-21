@@ -6,6 +6,7 @@ import {
 import { PrismaService } from './prisma.service';
 import { AuthService } from './auth.service';
 import { RegisterUserDto } from './dto/register-user.dto';
+import { LoginUserDto } from './dto/login-user.dto';
 
 @Controller()
 export class AuthServiceController {
@@ -39,4 +40,10 @@ export class AuthServiceController {
   register(@Payload() data: RegisterUserDto) {
     return this.authService.register(data);
   }
+
+
+  @MessagePattern({ cmd: 'auth_login' })
+login(@Payload() data: LoginUserDto) {
+  return this.authService.login(data);
+}
 }

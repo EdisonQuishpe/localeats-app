@@ -19,7 +19,7 @@ export class AppController {
 
     @Inject('SUPPORT_SERVICE')
     private readonly supportClient: ClientProxy,
-  ) {}
+  ) { }
 
   @Get()
   getGatewayStatus() {
@@ -45,25 +45,35 @@ export class AppController {
   }
 
   @Get('auth/database-health')
-checkAuthDatabase() {
-  return this.authClient.send(
-    { cmd: 'auth_db_health' },
-    {},
-  );
-}
+  checkAuthDatabase() {
+    return this.authClient.send(
+      { cmd: 'auth_db_health' },
+      {},
+    );
+  }
 
 
-@Post('auth/register')
-register(@Body() body: {
-  name: string;
+  @Post('auth/register')
+  register(@Body() body: {
+    name: string;
+    email: string;
+    password: string;
+  }) {
+    return this.authClient.send(
+      { cmd: 'auth_register' },
+      body,
+    );
+  }
+
+  @Post('auth/login')
+login(@Body() body: {
   email: string;
   password: string;
 }) {
   return this.authClient.send(
-    { cmd: 'auth_register' },
+    { cmd: 'auth_login' },
     body,
   );
 }
-
 
 }
