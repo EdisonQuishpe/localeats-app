@@ -1,5 +1,12 @@
-import { Controller, Get, Inject } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Inject,
+  Post,
+} from '@nestjs/common';
 import { ClientProxy } from '@nestjs/microservices';
+
 
 @Controller()
 export class AppController {
@@ -44,4 +51,19 @@ checkAuthDatabase() {
     {},
   );
 }
+
+
+@Post('auth/register')
+register(@Body() body: {
+  name: string;
+  email: string;
+  password: string;
+}) {
+  return this.authClient.send(
+    { cmd: 'auth_register' },
+    body,
+  );
+}
+
+
 }

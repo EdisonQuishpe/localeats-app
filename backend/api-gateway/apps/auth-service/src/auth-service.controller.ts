@@ -1,10 +1,18 @@
 import { Controller } from '@nestjs/common';
-import { MessagePattern } from '@nestjs/microservices';
+import {
+  MessagePattern,
+  Payload,
+} from '@nestjs/microservices';
 import { PrismaService } from './prisma.service';
+import { AuthService } from './auth.service';
+import { RegisterUserDto } from './dto/register-user.dto';
 
 @Controller()
 export class AuthServiceController {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly authService: AuthService,
+  ) {}
 
   @MessagePattern({ cmd: 'auth_ping' })
   ping() {
@@ -25,5 +33,10 @@ export class AuthServiceController {
       status: 'connected',
       userCount: users,
     };
+  }
+
+  @MessagePattern({ cmd: 'auth_register' })
+  register(@Payload() data: RegisterUserDto) {
+    return this.authService.register(data);
   }
 }
