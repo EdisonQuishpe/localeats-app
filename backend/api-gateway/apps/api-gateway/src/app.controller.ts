@@ -104,4 +104,12 @@ checkSupportDatabase() {
   );
 }
 
+@Get('products/database-health')
+checkProductDatabase() {
+  return this.productClient.send(
+    { cmd: 'product_db_health' },
+    {},
+  );
+}
+
 }
