@@ -2,6 +2,7 @@
 
 import { createContext, useContext, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { setToken, clearToken } from "../lib/api";
 
 const AuthContext = createContext({
   user: null,
@@ -26,14 +27,21 @@ export function AuthProvider({ children }) {
     setLoading(false);
   }, []);
 
-  const login = (userData) => {
+  // Recibe { user, accessToken } desde el login del Gateway.
+  // Compatible con el formato antiguo (solo userData).
+  const login = (payload) => {
+    const userData = payload?.user || payload;
+    const token = payload?.accessToken || payload?.token;
+
     setUser(userData);
     localStorage.setItem("localeats-user", JSON.stringify(userData));
+    if (token) setToken(token);
   };
 
   const logout = () => {
     setUser(null);
     localStorage.removeItem("localeats-user");
+    clearToken();
   };
 
   if (loading) return null;
