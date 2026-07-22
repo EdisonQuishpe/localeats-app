@@ -4,6 +4,7 @@ import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import { useTheme } from "../components/ThemeProvider";
 import { ProtectedRoute, useAuth } from "../components/AuthProvider";
+import { api } from "../lib/api";
 
 const statusConfig = {
   pending: { color: "var(--warning)", label: "pending", icon: "⏳" },
@@ -27,9 +28,12 @@ function OrdersContent() {
 
   const fetchOrders = async () => {
     setLoading(true);
-    const res = await fetch(`/api/orders?userId=${user.id}`);
-    const data = await res.json();
-    if (Array.isArray(data)) setOrders(data);
+    try {
+      const data = await api.get(`/orders?userId=${user.id}`);
+      if (Array.isArray(data)) setOrders(data);
+    } catch {
+      setOrders([]);
+    }
     setLoading(false);
   };
 

@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { DotLottieReact } from "@lottiefiles/dotlottie-react";
 import { useTheme } from "../components/ThemeProvider";
 import { ProtectedRoute, useAuth } from "../components/AuthProvider";
+import { api } from "../lib/api";
 
 function ProductsContent() {
   const { t } = useTheme();
@@ -22,9 +23,12 @@ function ProductsContent() {
 
   const fetchProducts = async () => {
     setLoading(true);
-    const res = await fetch("/api/products");
-    const data = await res.json();
-    setProducts(data);
+    try {
+      const data = await api.get("/products");
+      setProducts(data);
+    } catch {
+      setProducts([]);
+    }
     setLoading(false);
   };
 
@@ -42,31 +46,36 @@ function ProductsContent() {
     }
     if (!user?.id) return;
 
-    const url = editingProduct ? `/api/products/${editingProduct}` : "/api/products";
-    const method = editingProduct ? "PUT" : "POST";
-    const response = await fetch(url, {
-      method,
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ ...form, userId: user.id }),
-    });
+    const payload = {
+      name: form.name,
+      description: form.description,
+      price: Number(form.price),
+    };
 
-    if (response.ok) {
+    try {
+      if (editingProduct) {
+        // Gateway: PATCH /products/:id
+        await api.patch(`/products/${editingProduct}`, payload);
+      } else {
+        // Gateway: POST /products (ownerId = dueno del producto)
+        await api.post("/products", { ...payload, ownerId: user.id });
+      }
       setForm({ name: "", description: "", price: "" });
       setEditingProduct(null);
       fetchProducts();
+    } catch (err) {
+      alert(err.message || t("fillAll"));
     }
   };
 
   const handleDelete = async (id) => {
     if (!user?.id) return;
-    const response = await fetch(`/api/products/${id}`, {
-      method: "DELETE",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ userId: user.id }),
-    });
-    if (response.ok) {
+    try {
+      await api.delete(`/products/${id}`);
       setDeleteDialog({ open: false, product: null });
       fetchProducts();
+    } catch (err) {
+      alert(err.message);
     }
   };
 
@@ -100,19 +109,18 @@ function ProductsContent() {
 
   const placeOrder = async () => {
     if (!user?.id || cart.length === 0) return;
-    const res = await fetch("/api/orders", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
+    try {
+      // Gateway: POST /orders -> { userId, items: [{ productId, quantity }] }
+      await api.post("/orders", {
         userId: user.id,
         items: cart.map((i) => ({ productId: i.productId, quantity: i.quantity })),
-      }),
-    });
-    if (res.ok) {
+      });
       setCart([]);
       setShowCart(false);
       setOrderSuccess(true);
       setTimeout(() => setOrderSuccess(false), 3000);
+    } catch (err) {
+      alert(err.message);
     }
   };
 
@@ -341,7 +349,7 @@ function ProductsContent() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <AnimatePresence>
               {products.map((p) => {
-                const isOwner = p.userId === user?.id;
+                const isOwner = p.ownerId === user?.id;
                 const inCart = cart.find((i) => i.productId === p.id);
                 return (
                   <motion.div
@@ -487,7 +495,7 @@ function ProductsContent() {
                 </p>
 
                 <div className="flex gap-3 mt-5">
-                  {selectedProduct.userId !== user?.id && (
+                  {selectedProduct.ownerId !== user?.id && (
                     <motion.button
                       whileHover={{ scale: 1.02 }}
                       whileTap={{ scale: 0.98 }}
