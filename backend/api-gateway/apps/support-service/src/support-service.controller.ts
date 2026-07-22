@@ -5,12 +5,14 @@ import {
 } from '@nestjs/microservices';
 import { PrismaService } from './prisma.service';
 import { SupportService } from './support.service';
+import { NotificationsService } from './notifications.service';
 
 @Controller()
 export class SupportServiceController {
   constructor(
     private readonly prisma: PrismaService,
     private readonly supportService: SupportService,
+    private readonly notificationsService: NotificationsService,
   ) {}
 
   @MessagePattern({ cmd: 'support_ping' })
@@ -75,5 +77,30 @@ export class SupportServiceController {
   @MessagePattern({ cmd: 'conversations_close' })
   closeConversation(@Payload() id: number) {
     return this.supportService.closeConversation(Number(id));
+  }
+
+  // ---------- Notificaciones ----------
+  @MessagePattern({ cmd: 'notifications_find_by_user' })
+  findNotifications(@Payload() userId: number) {
+    return this.notificationsService.findAllByUser(Number(userId));
+  }
+
+  @MessagePattern({ cmd: 'notifications_create' })
+  createNotification(
+    @Payload()
+    data: {
+      type: string;
+      title: string;
+      body: string;
+      link?: string;
+      userId: number;
+    },
+  ) {
+    return this.notificationsService.create(data);
+  }
+
+  @MessagePattern({ cmd: 'notifications_mark_read' })
+  markNotificationsRead(@Payload() userId: number) {
+    return this.notificationsService.markAllRead(Number(userId));
   }
 }

@@ -7,6 +7,7 @@ import {
   Param,
   Patch,
   Post,
+  Query,
   Req,
   UseGuards,
 } from '@nestjs/common';
@@ -162,6 +163,68 @@ export class AppController {
     );
   }
 
+  // --- Orders (Pedidos) ---
+  @Get('orders')
+  @UseGuards(JwtAuthGuard)
+  findAllOrders(@Query('userId') userId?: string) {
+    return this.productClient.send(
+      { cmd: 'orders_find_all' },
+      { userId: userId ? Number(userId) : undefined },
+    );
+  }
+
+  @Get('orders/:id')
+  @UseGuards(JwtAuthGuard)
+  findOneOrder(@Param('id') id: string) {
+    return this.productClient.send(
+      { cmd: 'orders_find_one' },
+      Number(id),
+    );
+  }
+
+  @Post('orders')
+  @UseGuards(JwtAuthGuard)
+  createOrder(
+    @Body()
+    body: {
+      userId: number;
+      items: { productId: number; quantity: number }[];
+    },
+  ) {
+    return this.productClient.send({ cmd: 'orders_create' }, body);
+  }
+
+  @Patch('orders/:id/status')
+  @UseGuards(JwtAuthGuard)
+  updateOrderStatus(
+    @Param('id') id: string,
+    @Body() body: { status: string },
+  ) {
+    return this.productClient.send(
+      { cmd: 'orders_update_status' },
+      { id: Number(id), status: body.status },
+    );
+  }
+
+  // --- Users (Administración) ---
+  @Get('users')
+  @UseGuards(JwtAuthGuard)
+  findAllUsers() {
+    return this.authClient.send({ cmd: 'users_find_all' }, {});
+  }
+
+  @Patch('users/:id')
+  @UseGuards(JwtAuthGuard)
+  updateUser(
+    @Param('id') id: string,
+    @Body() body: { role?: string; isActive?: boolean },
+  ) {
+    return this.authClient.send(
+      { cmd: 'users_update' },
+      { id: Number(id), data: body },
+    );
+  }
+
 
   @Get('support/conversations')
 @UseGuards(JwtAuthGuard)
@@ -221,4 +284,41 @@ closeConversation(@Param('id') id: string) {
     Number(id),
   );
 }
+
+  // --- Notifications ---
+  @Get('notifications')
+  @UseGuards(JwtAuthGuard)
+  findNotifications(@Query('userId') userId: string) {
+    return this.supportClient.send(
+      { cmd: 'notifications_find_by_user' },
+      Number(userId),
+    );
+  }
+
+  @Post('notifications')
+  @UseGuards(JwtAuthGuard)
+  createNotification(
+    @Body()
+    body: {
+      type: string;
+      title: string;
+      body: string;
+      link?: string;
+      userId: number;
+    },
+  ) {
+    return this.supportClient.send(
+      { cmd: 'notifications_create' },
+      body,
+    );
+  }
+
+  @Patch('notifications')
+  @UseGuards(JwtAuthGuard)
+  markNotificationsRead(@Body() body: { userId: number }) {
+    return this.supportClient.send(
+      { cmd: 'notifications_mark_read' },
+      Number(body.userId),
+    );
+  }
 }

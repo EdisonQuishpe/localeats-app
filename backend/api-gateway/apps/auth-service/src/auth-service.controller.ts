@@ -5,6 +5,7 @@ import {
 } from '@nestjs/microservices';
 import { PrismaService } from './prisma.service';
 import { AuthService } from './auth.service';
+import { UsersService } from './users.service';
 import { RegisterUserDto } from './dto/register-user.dto';
 import { LoginUserDto } from './dto/login-user.dto';
 
@@ -13,6 +14,7 @@ export class AuthServiceController {
   constructor(
     private readonly prisma: PrismaService,
     private readonly authService: AuthService,
+    private readonly usersService: UsersService,
   ) {}
 
   @MessagePattern({ cmd: 'auth_ping' })
@@ -51,5 +53,17 @@ login(@Payload() data: LoginUserDto) {
 @MessagePattern({ cmd: 'auth_validate_token' })
 validateToken(@Payload() token: string) {
   return this.authService.validateToken(token);
+}
+
+@MessagePattern({ cmd: 'users_find_all' })
+findAllUsers() {
+  return this.usersService.findAll();
+}
+
+@MessagePattern({ cmd: 'users_update' })
+updateUser(
+  @Payload() payload: { id: number; data: { role?: string; isActive?: boolean } },
+) {
+  return this.usersService.update(Number(payload.id), payload.data);
 }
 }
