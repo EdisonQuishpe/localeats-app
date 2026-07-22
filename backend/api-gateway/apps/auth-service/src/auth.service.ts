@@ -1,6 +1,7 @@
 import {
   ConflictException,
   Injectable,
+  NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
@@ -92,6 +93,29 @@ export class AuthService {
         email: user.email,
         role: user.role,
       },
+    };
+  }
+
+  async resetPassword(data: { email: string; newPassword: string }) {
+    const normalizedEmail = data.email.trim().toLowerCase();
+
+    const user = await this.prisma.user.findUnique({
+      where: { email: normalizedEmail },
+    });
+
+    if (!user) {
+      throw new NotFoundException('No existe un usuario con ese correo');
+    }
+
+    const hashedPassword = await bcrypt.hash(data.newPassword, 10);
+
+    await this.prisma.user.update({
+      where: { id: user.id },
+      data: { password: hashedPassword },
+    });
+
+    return {
+      message: 'Contraseña actualizada correctamente',
     };
   }
 

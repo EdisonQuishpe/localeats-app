@@ -3,6 +3,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { useTheme } from "../components/ThemeProvider";
+import { api } from "../lib/api";
 
 export default function ForgotPassword() {
   const { t } = useTheme();
@@ -22,17 +23,12 @@ export default function ForgotPassword() {
       setError(t("fillAll"));
       return;
     }
-    const res = await fetch("/api/forgot-password", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(form),
-    });
-    const data = await res.json();
-    if (data.message) {
-      setMessage(data.message);
+    try {
+      const data = await api.post("/auth/forgot-password", form, { auth: false });
+      setMessage(data.message || t("passwordUpdated"));
       setForm({ email: "", newPassword: "" });
-    } else {
-      setError(data.error || t("passwordError"));
+    } catch (err) {
+      setError(err.message || t("passwordError"));
     }
   };
 

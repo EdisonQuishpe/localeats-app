@@ -55,6 +55,11 @@ validateToken(@Payload() token: string) {
   return this.authService.validateToken(token);
 }
 
+@MessagePattern({ cmd: 'auth_reset_password' })
+resetPassword(@Payload() data: { email: string; newPassword: string }) {
+  return this.authService.resetPassword(data);
+}
+
 @MessagePattern({ cmd: 'users_find_all' })
 findAllUsers() {
   return this.usersService.findAll();

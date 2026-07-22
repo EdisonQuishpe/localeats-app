@@ -90,6 +90,17 @@ export class AppController {
     return this.authClient.send({ cmd: 'auth_login' }, body);
   }
 
+  @Post('auth/forgot-password')
+  resetPassword(
+    @Body()
+    body: {
+      email: string;
+      newPassword: string;
+    },
+  ) {
+    return this.authClient.send({ cmd: 'auth_reset_password' }, body);
+  }
+
   @Get('auth/profile')
   @UseGuards(JwtAuthGuard)
   getProfile(@Req() request: Request & { user?: JwtPayload }) {
