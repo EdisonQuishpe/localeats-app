@@ -6,6 +6,7 @@ import Link from "next/link";
 import { motion } from "framer-motion";
 import { useTheme } from "../../components/ThemeProvider";
 import { ProtectedRoute, useAuth } from "../../components/AuthProvider";
+import { api } from "../../lib/api";
 
 let socket;
 
@@ -19,9 +20,13 @@ function SupportDetailContent() {
   const messagesEnd = useRef(null);
 
   const fetchConversation = async () => {
-    const res = await fetch(`/api/conversations/${conversationId}`);
-    const data = await res.json();
-    setConversation(data);
+    try {
+      // Gateway: GET /support/conversations/:id incluye los mensajes
+      const data = await api.get(`/support/conversations/${conversationId}`);
+      setConversation(data);
+    } catch (err) {
+      console.error(err);
+    }
   };
 
   useEffect(() => {
@@ -48,20 +53,20 @@ function SupportDetailContent() {
     if (!reply.trim()) return;
 
     const senderRole = user?.role === "support" || user?.role === "admin" ? "support" : "user";
-    const res = await fetch("/api/messages", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
+    try {
+      // Gateway: POST /support/messages -> mensaje creado
+      const data = await api.post("/support/messages", {
         content: reply,
         senderRole,
-        conversationId,
+        conversationId: Number(conversationId),
         userId: user?.id,
-      }),
-    });
-    const data = await res.json();
-    if (data.data) {
-      socket.emit("support-message", { conversationId, message: data.data });
-      setReply("");
+      });
+      if (data && data.id) {
+        socket.emit("support-message", { conversationId, message: data });
+        setReply("");
+      }
+    } catch (err) {
+      console.error(err);
     }
   };
 

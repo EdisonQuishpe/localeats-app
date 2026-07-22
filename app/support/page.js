@@ -4,6 +4,7 @@ import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import { useTheme } from "../components/ThemeProvider";
 import { ProtectedRoute, useAuth } from "../components/AuthProvider";
+import { api } from "../lib/api";
 
 function SupportContent() {
   const { t } = useTheme();
@@ -17,11 +18,15 @@ function SupportContent() {
 
   const fetchConversations = async () => {
     setLoading(true);
-    // Agents/admins see ALL conversations; regular users see only their own
-    const url = isAgent ? "/api/conversations" : `/api/conversations${user?.id ? `?userId=${user.id}` : ""}`;
-    const res = await fetch(url);
-    const data = await res.json();
-    if (Array.isArray(data)) setConversations(data);
+    try {
+      // Gateway: GET /support/conversations devuelve TODAS.
+      // Los usuarios normales filtran sus propias conversaciones aqui.
+      const data = await api.get("/support/conversations");
+      const list = Array.isArray(data) ? data : [];
+      setConversations(isAgent ? list : list.filter((c) => c.userId === user?.id));
+    } catch {
+      setConversations([]);
+    }
     setLoading(false);
   };
 
@@ -30,15 +35,16 @@ function SupportContent() {
   const createConversation = async (e) => {
     e.preventDefault();
     if (!subject.trim()) return;
-    const res = await fetch("/api/conversations", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ subject: subject.trim(), userId: user?.id }),
-    });
-    if (res.ok) {
+    try {
+      await api.post("/support/conversations", {
+        subject: subject.trim(),
+        userId: user?.id,
+      });
       setSubject("");
       setShowNewForm(false);
       fetchConversations();
+    } catch (err) {
+      console.error(err);
     }
   };
 

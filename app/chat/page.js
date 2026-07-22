@@ -5,6 +5,7 @@ import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import { useTheme } from "../components/ThemeProvider";
 import { ProtectedRoute, useAuth } from "../components/AuthProvider";
+import { api } from "../lib/api";
 
 let socket;
 
@@ -26,9 +27,12 @@ function ChatContent() {
       if (savedConversationId) {
         setConversationId(savedConversationId);
         socket.emit("join-conversation", savedConversationId);
-        fetch(`/api/messages?conversationId=${savedConversationId}`)
-          .then((res) => res.json())
-          .then((data) => { if (Array.isArray(data)) setMessages(data); });
+        // Gateway: la conversacion incluye sus mensajes
+        api.get(`/support/conversations/${savedConversationId}`)
+          .then((data) => {
+            if (data && Array.isArray(data.messages)) setMessages(data.messages);
+          })
+          .catch(() => {});
       }
     });
     socket.on("disconnect", () => setConnected(false));
@@ -48,37 +52,40 @@ function ChatContent() {
   const createConversation = async (e) => {
     e.preventDefault();
     if (!subject.trim()) return;
-    const res = await fetch("/api/conversations", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ subject, userId: user?.id }),
-    });
-    const data = await res.json();
-    if (data.conversation) {
-      const newId = data.conversation.id.toString();
-      setConversationId(newId);
-      localStorage.setItem("conversationId", newId);
-      socket.emit("join-conversation", newId);
+    try {
+      // Gateway: POST /support/conversations -> conversacion creada
+      const data = await api.post("/support/conversations", {
+        subject,
+        userId: user?.id,
+      });
+      if (data && data.id) {
+        const newId = data.id.toString();
+        setConversationId(newId);
+        localStorage.setItem("conversationId", newId);
+        socket.emit("join-conversation", newId);
+      }
+    } catch (err) {
+      console.error(err);
     }
   };
 
   const sendMessage = async (e) => {
     e.preventDefault();
     if (!message.trim() || !conversationId || !user?.id) return;
-    const res = await fetch("/api/messages", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
+    try {
+      // Gateway: POST /support/messages -> mensaje creado
+      const data = await api.post("/support/messages", {
         content: message,
         senderRole: "user",
-        conversationId,
+        conversationId: Number(conversationId),
         userId: user.id,
-      }),
-    });
-    const data = await res.json();
-    if (data.data) {
-      socket.emit("support-message", { conversationId, message: data.data });
-      setMessage("");
+      });
+      if (data && data.id) {
+        socket.emit("support-message", { conversationId, message: data });
+        setMessage("");
+      }
+    } catch (err) {
+      console.error(err);
     }
   };
 
