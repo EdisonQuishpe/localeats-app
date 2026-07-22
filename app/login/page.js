@@ -6,6 +6,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { DotLottieReact } from "@lottiefiles/dotlottie-react";
 import { useTheme } from "../components/ThemeProvider";
 import { useAuth } from "../components/AuthProvider";
+import { api } from "../lib/api";
 
 export default function Login() {
   const router = useRouter();
@@ -28,19 +29,20 @@ export default function Login() {
       return;
     }
     setLoading(true);
-    const res = await fetch("/api/login", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(form),
-    });
-    const data = await res.json();
-    setLoading(false);
-    if (data.user) {
-      login(data.user);
-      setShowSuccess(true);
-      setTimeout(() => router.push("/dashboard"), 2500);
-    } else {
-      setError(data.error || t("wrongCredentials"));
+    try {
+      // Gateway: POST /auth/login -> { accessToken, user }
+      const data = await api.post("/auth/login", form, { auth: false });
+      setLoading(false);
+      if (data.accessToken && data.user) {
+        login(data); // guarda user + accessToken
+        setShowSuccess(true);
+        setTimeout(() => router.push("/dashboard"), 2500);
+      } else {
+        setError(t("wrongCredentials"));
+      }
+    } catch (err) {
+      setLoading(false);
+      setError(err.message || t("wrongCredentials"));
     }
   };
 

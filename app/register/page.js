@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { useTheme } from "../components/ThemeProvider";
+import { api } from "../lib/api";
 
 export default function Register() {
   const router = useRouter();
@@ -24,17 +25,18 @@ export default function Register() {
       return;
     }
     setLoading(true);
-    const res = await fetch("/api/register", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(form),
-    });
-    const data = await res.json();
-    setLoading(false);
-    if (data.message) {
-      router.push("/login");
-    } else {
-      setError(data.error || t("registerError"));
+    try {
+      // Gateway: POST /auth/register -> { message, user }
+      const data = await api.post("/auth/register", form, { auth: false });
+      setLoading(false);
+      if (data.message || data.user) {
+        router.push("/login");
+      } else {
+        setError(t("registerError"));
+      }
+    } catch (err) {
+      setLoading(false);
+      setError(err.message || t("registerError"));
     }
   };
 
