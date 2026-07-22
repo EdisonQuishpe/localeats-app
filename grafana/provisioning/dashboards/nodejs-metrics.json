@@ -62,6 +62,7 @@
                       "group": "prometheus",
                       "version": "v0",
                       "datasource": {
+                        "type": "prometheus",
                         "uid": "prometheus-ds"
                       },
                       "spec": {
@@ -173,7 +174,8 @@
                       "group": "prometheus",
                       "version": "v0",
                       "datasource": {
-                        "name": "ffstyvo6mu4g0d"
+                        "type": "prometheus",
+                        "uid": "prometheus-ds"
                       },
                       "spec": {
                         "expr": "nodejs_heap_space_size_used_bytes{instance=~\"$instance\"}",
@@ -284,7 +286,8 @@
                       "group": "prometheus",
                       "version": "v0",
                       "datasource": {
-                        "name": "ffstyvo6mu4g0d"
+                        "type": "prometheus",
+                        "uid": "prometheus-ds"
                       },
                       "spec": {
                         "expr": "nodejs_heap_space_size_available_bytes{instance=~\"$instance\"}",
@@ -395,7 +398,8 @@
                       "group": "prometheus",
                       "version": "v0",
                       "datasource": {
-                        "name": "ffstyvo6mu4g0d"
+                        "type": "prometheus",
+                        "uid": "prometheus-ds"
                       },
                       "spec": {
                         "expr": "sum(nodejs_version_info{instance=~\"$instance\"}) by (version)",
@@ -511,7 +515,8 @@
                       "group": "prometheus",
                       "version": "v0",
                       "datasource": {
-                        "name": "ffstyvo6mu4g0d"
+                        "type": "prometheus",
+                        "uid": "prometheus-ds"
                       },
                       "spec": {
                         "expr": "sum(changes(process_start_time_seconds{instance=~\"$instance\"}[1m]))",
@@ -625,7 +630,8 @@
                       "group": "prometheus",
                       "version": "v0",
                       "datasource": {
-                        "name": "ffstyvo6mu4g0d"
+                        "type": "prometheus",
+                        "uid": "prometheus-ds"
                       },
                       "spec": {
                         "expr": "irate(process_cpu_user_seconds_total{instance=~\"$instance\"}[2m]) * 100",
@@ -646,7 +652,8 @@
                       "group": "prometheus",
                       "version": "v0",
                       "datasource": {
-                        "name": "ffstyvo6mu4g0d"
+                        "type": "prometheus",
+                        "uid": "prometheus-ds"
                       },
                       "spec": {
                         "expr": "irate(process_cpu_system_seconds_total{instance=~\"$instance\"}[2m]) * 100",
@@ -756,7 +763,8 @@
                       "group": "prometheus",
                       "version": "v0",
                       "datasource": {
-                        "name": "ffstyvo6mu4g0d"
+                        "type": "prometheus",
+                        "uid": "prometheus-ds"
                       },
                       "spec": {
                         "expr": "process_resident_memory_bytes{instance=~\"$instance\"}",
@@ -777,7 +785,8 @@
                       "group": "prometheus",
                       "version": "v0",
                       "datasource": {
-                        "name": "ffstyvo6mu4g0d"
+                        "type": "prometheus",
+                        "uid": "prometheus-ds"
                       },
                       "spec": {
                         "expr": "nodejs_heap_size_total_bytes{instance=~\"$instance\"}",
@@ -798,7 +807,8 @@
                       "group": "prometheus",
                       "version": "v0",
                       "datasource": {
-                        "name": "ffstyvo6mu4g0d"
+                        "type": "prometheus",
+                        "uid": "prometheus-ds"
                       },
                       "spec": {
                         "expr": "nodejs_heap_size_used_bytes{instance=~\"$instance\"}",
@@ -819,7 +829,8 @@
                       "group": "prometheus",
                       "version": "v0",
                       "datasource": {
-                        "name": "ffstyvo6mu4g0d"
+                        "type": "prometheus",
+                        "uid": "prometheus-ds"
                       },
                       "spec": {
                         "expr": "nodejs_external_memory_bytes{instance=~\"$instance\"}",
@@ -930,7 +941,8 @@
                       "group": "prometheus",
                       "version": "v0",
                       "datasource": {
-                        "name": "ffstyvo6mu4g0d"
+                        "type": "prometheus",
+                        "uid": "prometheus-ds"
                       },
                       "spec": {
                         "expr": "nodejs_eventloop_lag_seconds{instance=~\"$instance\"}",
@@ -1040,7 +1052,8 @@
                       "group": "prometheus",
                       "version": "v0",
                       "datasource": {
-                        "name": "ffstyvo6mu4g0d"
+                        "type": "prometheus",
+                        "uid": "prometheus-ds"
                       },
                       "spec": {
                         "expr": "nodejs_active_handles_total{instance=~\"$instance\"}",
@@ -1061,7 +1074,8 @@
                       "group": "prometheus",
                       "version": "v0",
                       "datasource": {
-                        "name": "ffstyvo6mu4g0d"
+                        "type": "prometheus",
+                        "uid": "prometheus-ds"
                       },
                       "spec": {
                         "expr": "nodejs_active_requests_total{instance=~\"$instance\"}",
@@ -1321,7 +1335,8 @@
             "group": "prometheus",
             "version": "v0",
             "datasource": {
-              "name": "ffstyvo6mu4g0d"
+              "type": "prometheus",
+              "uid": "prometheus-ds"
             },
             "spec": {
               "__legacyStringValue": "label_values(nodejs_version_info, instance)"
