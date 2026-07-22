@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import { useTheme } from "../components/ThemeProvider";
 import { ProtectedRoute, useAuth } from "../components/AuthProvider";
 import { useRouter } from "next/navigation";
+import { api } from "../lib/api";
 
 function AdminContent() {
   const { t } = useTheme();
@@ -23,35 +24,34 @@ function AdminContent() {
 
   const fetchUsers = async () => {
     setLoading(true);
-    const res = await fetch("/api/users");
-    const data = await res.json();
-    if (Array.isArray(data)) setUsers(data);
+    try {
+      const data = await api.get("/users");
+      if (Array.isArray(data)) setUsers(data);
+    } catch {
+      setUsers([]);
+    }
     setLoading(false);
   };
 
   const updateRole = async (userId, newRole) => {
-    const res = await fetch(`/api/users/${userId}`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ role: newRole }),
-    });
-    if (res.ok) {
+    try {
+      await api.patch(`/users/${userId}`, { role: newRole });
       setUsers((prev) =>
         prev.map((u) => (u.id === userId ? { ...u, role: newRole } : u))
       );
+    } catch (err) {
+      alert(err.message);
     }
   };
 
   const toggleActive = async (userId, currentStatus) => {
-    const res = await fetch(`/api/users/${userId}`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ isActive: !currentStatus }),
-    });
-    if (res.ok) {
+    try {
+      await api.patch(`/users/${userId}`, { isActive: !currentStatus });
       setUsers((prev) =>
         prev.map((u) => (u.id === userId ? { ...u, isActive: !currentStatus } : u))
       );
+    } catch (err) {
+      alert(err.message);
     }
   };
 

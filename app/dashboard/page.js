@@ -4,6 +4,7 @@ import Link from "next/link";
 import { motion } from "framer-motion";
 import { useTheme } from "../components/ThemeProvider";
 import { useAuth, ProtectedRoute } from "../components/AuthProvider";
+import { api } from "../lib/api";
 import {
   AreaChart,
   Area,
@@ -41,17 +42,14 @@ function DashboardContent() {
   const [currentTime, setCurrentTime] = useState(new Date());
 
   useEffect(() => {
-    fetch("/api/products")
-      .then((r) => r.json())
+    api.get("/products")
       .then((data) => { if (Array.isArray(data)) setProducts(data); })
       .catch(() => {});
-    fetch("/api/users")
-      .then((r) => r.json())
+    api.get("/users")
       .then((data) => { if (Array.isArray(data)) setActiveUsers(data.filter((u) => u.isActive).length); })
       .catch(() => {});
     if (user?.id) {
-      fetch(`/api/orders?userId=${user.id}`)
-        .then((r) => r.json())
+      api.get(`/orders?userId=${user.id}`)
         .then((data) => { if (Array.isArray(data)) setOrders(data); })
         .catch(() => {});
     }

@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "./AuthProvider";
 import { useTheme } from "./ThemeProvider";
 import { useRouter } from "next/navigation";
+import { api } from "../lib/api";
 
 let socket;
 
@@ -22,14 +23,14 @@ export default function NotificationPanel() {
   // Fetch existing notifications
   useEffect(() => {
     if (!user?.id) return;
-    fetch(`/api/notifications?userId=${user.id}`)
-      .then((res) => res.json())
+    api.get(`/notifications?userId=${user.id}`)
       .then((data) => {
         if (Array.isArray(data)) {
           setNotifications(data);
           if (data.some((n) => !n.read)) setHasNew(true);
         }
-      });
+      })
+      .catch(() => {});
   }, [user]);
 
   // Socket connection for push notifications
@@ -64,11 +65,11 @@ export default function NotificationPanel() {
 
   const markAllRead = async () => {
     if (!user?.id) return;
-    await fetch("/api/notifications", {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ userId: user.id }),
-    });
+    try {
+      await api.patch("/notifications", { userId: user.id });
+    } catch {
+      // no bloquear la UI si falla
+    }
     setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
     setHasNew(false);
   };
