@@ -1,11 +1,13 @@
 import { Module } from '@nestjs/common';
 import { ClientsModule, Transport } from '@nestjs/microservices';
+import { PrometheusModule } from '@willsoto/nestjs-prometheus';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { JwtAuthGuard } from './auth/jwt-auth.guard';
 
 @Module({
   imports: [
+    PrometheusModule.register(),
     ClientsModule.register([
       {
         name: 'AUTH_SERVICE',
