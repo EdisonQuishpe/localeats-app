@@ -9,8 +9,8 @@ WORKDIR /app
 
 # openssl lo necesita Prisma; python3/make/g++ compilan bcrypt (módulo nativo)
 RUN apt-get update -y \
- && apt-get install -y --no-install-recommends openssl ca-certificates python3 make g++ \
- && rm -rf /var/lib/apt/lists/*
+    && apt-get install -y --no-install-recommends openssl ca-certificates python3 make g++ \
+    && rm -rf /var/lib/apt/lists/*
 
 # Instalar dependencias (capa cacheable)
 COPY package.json package-lock.json ./
@@ -21,6 +21,13 @@ COPY . .
 
 # Generar el cliente Prisma (descarga el engine de Linux) y compilar Next
 RUN npx prisma generate
+
+# Next.js evalua next.config.rewrites() en tiempo de BUILD y hornea el destino
+# en .next/routes-manifest.json. Por eso GATEWAY_URL debe existir aqui (no basta
+# en runtime). Apunta al servicio "backend" de docker-compose.
+ARG GATEWAY_URL=http://backend:3001
+ENV GATEWAY_URL=$GATEWAY_URL
+
 RUN npm run build
 
 # ---------- Etapa 2: runtime ----------
@@ -30,8 +37,8 @@ ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
 
 RUN apt-get update -y \
- && apt-get install -y --no-install-recommends openssl ca-certificates \
- && rm -rf /var/lib/apt/lists/*
+    && apt-get install -y --no-install-recommends openssl ca-certificates \
+    && rm -rf /var/lib/apt/lists/*
 
 # Copiar solo lo necesario desde la etapa de build
 COPY --from=builder /app/node_modules   ./node_modules

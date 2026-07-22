@@ -77,6 +77,10 @@ services:
   frontend:
     build:
       context: .
+      args:
+        # Next.js hornea los rewrites en build: el destino del proxy /gw
+        # debe apuntar al contenedor "backend".
+        GATEWAY_URL: http://backend:3001
     container_name: localeats-frontend
     restart: unless-stopped
     depends_on:
@@ -85,6 +89,9 @@ services:
     environment:
       NODE_ENV: production
       DATABASE_URL: ${DATABASE_URL}
+      # El proxy /gw de Next.js debe apuntar al contenedor del backend,
+      # no a localhost (que seria el propio contenedor del frontend).
+      GATEWAY_URL: http://backend:3001
     ports:
       - "3000:3000"
     networks:
